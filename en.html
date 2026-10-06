@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>魚眼展開</title>
+<title>Unwrap fisheye</title>
 <style>
   :root { color-scheme: dark; --bg:#12110e; --panel:#1c1a16; --line:#3a342c; --text:#f4efe6; --muted:#a39888; --accent:#e0a15a; }
   * { box-sizing: border-box; }
@@ -43,56 +43,56 @@
 </head>
 <body>
 <header>
-  <a class="lang" href="en.html">English</a>
-  <h1>魚眼展開</h1>
-  <p>側面、頂視、底視都可以調裁切。0% 先改用有限投影，成個圓留低，再揀寬高比。</p>
+  <a class="lang" href="index.html">中文</a>
+  <h1>Unwrap fisheye</h1>
+  <p>Side, top, and bottom views all have a crop control. At 0% the whole circle is kept with a finite projection, and you set the aspect ratio.</p>
 </header>
 <main>
   <aside>
-    <div class="drop" id="drop">拖入 JPEG／PNG，或撳下面揀檔</div>
+    <div class="drop" id="drop">Drop a JPEG or PNG, or use the button below</div>
     <input id="file" type="file" accept="image/jpeg,image/png,image/webp" hidden />
-    <button id="pick" type="button">選擇圖片</button>
+    <button id="pick" type="button">Choose image</button>
 
-    <label>視角</label>
+    <label>View</label>
     <select id="view">
-      <option value="side" selected>側面（望前）</option>
-      <option value="bottom">底視（望天）</option>
-      <option value="top">頂視（小行星／望下）</option>
+      <option value="side" selected>Side (looking forward)</option>
+      <option value="bottom">Bottom (looking up)</option>
+      <option value="top">Top (tiny planet / looking down)</option>
     </select>
     <p class="note" id="viewNote"></p>
 
     <div id="cropWrap">
-      <label>輸出裁切 <span class="val" id="cropVal">1%</span></label>
+      <label>Output crop <span class="val" id="cropVal">1%</span></label>
       <input id="crop" type="range" min="0" max="10" value="1" step="1" />
-      <p class="note" id="cropNote">頂同底各裁走幾多個圓入面嘅像素。0% 代表唔裁。</p>
+      <p class="note" id="cropNote">How much of the circle is removed at the top and at the bottom. 0% means no crop.</p>
     </div>
 
     <div id="aspectWrap" hidden>
-      <label><span id="aspectName">高 ÷ 寬</span> <span class="val" id="aspectVal">1.58</span></label>
+      <label><span id="aspectName">Height ÷ width</span> <span class="val" id="aspectVal">1.58</span></label>
       <input id="aspect" type="range" min="1" max="2" value="1.58" step="0.01" />
-      <p class="note" id="aspectNote">0% 裁切先用。1 係正方形，2 係高兩倍。預設 1.58。</p>
+      <p class="note" id="aspectNote">Used only at 0% crop. 1 is square, 2 is twice as tall. Default 1.58.</p>
     </div>
 
     <div id="startWrap" hidden>
-      <label>起點 <span class="val" id="startVal">0°</span></label>
+      <label>Start angle <span class="val" id="startVal">0°</span></label>
       <input id="start" type="range" min="0" max="360" value="0" step="1" />
-      <p class="note">圓周由邊一度開始拆。0° 係圓嘅右面，轉一圈會返到同一張相。</p>
+      <p class="note">Where to start unwrapping the circle. 0° is the right side. A full turn returns to the same picture.</p>
     </div>
 
-    <label class="check"><input id="auto" type="checkbox" checked /> 上傳後自動展開</label>
-    <label class="check"><input id="mirror" type="checkbox" /> 左右反轉</label>
+    <label class="check"><input id="auto" type="checkbox" checked /> Convert automatically after upload</label>
+    <label class="check"><input id="mirror" type="checkbox" /> Flip left–right</label>
 
-    <button id="go" type="button" disabled>展開</button>
-    <button id="save" class="ghost" type="button" disabled>儲存 JPEG</button>
-    <p id="status">未有圖片。</p>
+    <button id="go" type="button" disabled>Convert</button>
+    <button id="save" class="ghost" type="button" disabled>Save JPEG</button>
+    <p id="status">No image yet.</p>
   </aside>
   <section class="stage">
     <figure>
-      <figcaption>原圖</figcaption>
+      <figcaption>Original</figcaption>
       <canvas id="src"></canvas>
     </figure>
     <figure>
-      <figcaption id="outCap">結果</figcaption>
+      <figcaption id="outCap">Result</figcaption>
       <canvas id="dst"></canvas>
     </figure>
   </section>
@@ -176,9 +176,9 @@ function aForTopSpan(span, emax) {
 }
 
 const VIEW_DEFAULTS = {
-  side: { crop: 1, aspectMin: 1, aspectMax: 2, aspect: 1.58, aspectName: "高 ÷ 寬", aspectNote: "0% 先用。1 係正方形，2 係高兩倍。預設 1.58。" },
-  bottom: { crop: 3, aspectMin: 2, aspectMax: 3.8, aspect: 2.5, aspectName: "寬 ÷ 高", aspectNote: "0% 先用。2 較高，3.8 接近等距（最闊）。預設 2.5。" },
-  top: { crop: 3, aspectMin: 1.6, aspectMax: 3.2, aspect: 2.2, aspectName: "寬 ÷ 高", aspectNote: "0% 先用。1.6 較高，3.2 接近等距（最闊）。預設 2.2。" },
+  side: { crop: 1, aspectMin: 1, aspectMax: 2, aspect: 1.58, aspectName: "Height ÷ width", aspectNote: "Used only at 0%. 1 is square, 2 is twice as tall. Default 1.58." },
+  bottom: { crop: 3, aspectMin: 2, aspectMax: 3.8, aspect: 2.5, aspectName: "Width ÷ height", aspectNote: "Used only at 0%. 2 is taller, 3.8 is near equirectangular (widest). Default 2.5." },
+  top: { crop: 3, aspectMin: 1.6, aspectMax: 3.2, aspect: 2.2, aspectName: "Width ÷ height", aspectNote: "Used only at 0%. 1.6 is taller, 3.2 is near equirectangular (widest). Default 2.2." },
 };
 
 function bboxContent(pred) {
@@ -301,7 +301,7 @@ function buildPlan() {
         const phi = Math.atan((0.5 - (y + 0.5) / H) * 2 * t);
         return fishRay(lam, phi);
       };
-      summary = `側面，上下各裁 ${crop}%（約 ±${(phiMax * 180 / Math.PI).toFixed(1)}°）。高÷寬 ${(H / W).toFixed(2)}。`;
+      summary = `Side view, ${crop}% cropped from the top and the bottom (about ±${(phiMax * 180 / Math.PI).toFixed(1)}°). Height÷width ${(H / W).toFixed(2)}.`;
     } else {
       const a = aForAspect(aspect);
       H = Math.max(2, Math.round(W * aspect));
@@ -312,7 +312,7 @@ function buildPlan() {
         const phi = a * Math.atan(n * tmax);
         return fishRay(lam, phi);
       };
-      summary = `側面，0% 裁切，成個圓留低。高÷寬 ${aspect.toFixed(2)}。`;
+      summary = `Side view, 0% crop, whole circle kept. Height÷width ${aspect.toFixed(2)}.`;
     }
     function fishRay(lam, phi) {
       const cphi = Math.cos(phi);
@@ -337,7 +337,7 @@ function buildPlan() {
         const rr = r * (Math.PI / 2 - elev) / (Math.PI / 2);
         return { sx: cx + rr * Math.cos(lam), sy: cy + rr * Math.sin(lam) };
       };
-      summary = `底視，圓心裁 ${crop}%（向上約 ${(elevMax * 180 / Math.PI).toFixed(0)}°）。寬÷高 ${(W / H).toFixed(2)}。`;
+      summary = `Bottom view, ${crop}% of the centre cropped (up to about ${(elevMax * 180 / Math.PI).toFixed(0)}°). Width÷height ${(W / H).toFixed(2)}.`;
     } else {
       const ymax = (2 * Math.PI) / aspect;
       const a = aForYMax(ymax);
@@ -349,7 +349,7 @@ function buildPlan() {
         const rr = r * (Math.PI / 2 - elev) / (Math.PI / 2);
         return { sx: cx + rr * Math.cos(lam), sy: cy + rr * Math.sin(lam) };
       };
-      summary = `底視，0% 裁切，圓心留低。寬÷高 ${aspect.toFixed(2)}。頂邊係正上方拉成一條線。`;
+      summary = `Bottom view, 0% crop, centre kept. Width÷height ${aspect.toFixed(2)}. The top edge is straight up, stretched into a line.`;
     }
   } else {
     W = 1400;
@@ -366,7 +366,7 @@ function buildPlan() {
         const rr = r * Math.tan(psi / 2);
         return { sx: cx + rr * Math.cos(lam), sy: cy + rr * Math.sin(lam) };
       };
-      summary = `頂視，行星圓心裁 ${crop}%（向下約 ${( -emin * 180 / Math.PI).toFixed(0)}°）。寬÷高 ${(W / H).toFixed(2)}。圓外高過 18° 嘅天空唔包。`;
+      summary = `Top view, ${crop}% of the planet centre cropped (down to about ${( -emin * 180 / Math.PI).toFixed(0)}°). Width÷height ${(W / H).toFixed(2)}. Sky more than 18° outside the circle is not included.`;
     } else {
       const ehi = 20 * Math.PI / 180;
       const spanWant = (2 * Math.PI) / aspect;
@@ -382,7 +382,7 @@ function buildPlan() {
         const rr = r * Math.tan(Math.max(0, psi) / 2);
         return { sx: cx + rr * Math.cos(lam), sy: cy + rr * Math.sin(lam) };
       };
-      summary = `頂視，0% 裁切，行星圓心留低。寬÷高 ${aspect.toFixed(2)}。底邊係正下方拉成一條線。`;
+      summary = `Top view, 0% crop, planet centre kept. Width÷height ${aspect.toFixed(2)}. The bottom edge is straight down, stretched into a line.`;
     }
   }
 
@@ -394,7 +394,7 @@ function buildPlan() {
     ray = (x, y) => ox(x * (W - 1) / (W2 - 1), y * (H - 1) / (H2 - 1));
     W = W2; H = H2;
   }
-  if (mirror) summary += " 已左右反轉。";
+  if (mirror) summary += " Flipped left–right.";
   return { W, H, ray, summary };
 }
 
@@ -403,7 +403,7 @@ function paint() {
   const token = ++job;
   $("go").disabled = true;
   $("save").disabled = true;
-  $("status").textContent = "展開中…";
+  $("status").textContent = "Converting…";
   const plan = buildPlan();
   const dst = $("dst");
   dst.width = plan.W;
@@ -428,11 +428,11 @@ function paint() {
       }
     }
     if (y < plan.H) {
-      $("status").textContent = `展開中 ${Math.round(100 * y / plan.H)}%`;
+      $("status").textContent = `Converting ${Math.round(100 * y / plan.H)}%`;
       requestAnimationFrame(step);
     } else {
       ctx.putImageData(img, 0, 0);
-      $("outCap").textContent = `結果 ${plan.W}×${plan.H}`;
+      $("outCap").textContent = `Result ${plan.W}×${plan.H}`;
       $("status").textContent = plan.summary;
       $("go").disabled = false;
       $("save").disabled = false;
@@ -458,11 +458,11 @@ function loadFile(file) {
     srcData = srcCtx.getImageData(0, 0, srcW, srcH).data;
     $("go").disabled = false;
     $("status").textContent = $("auto").checked
-      ? `已載入 ${img.naturalWidth}×${img.naturalHeight}。`
-      : `已載入 ${img.naturalWidth}×${img.naturalHeight}。撳「展開」先轉換。`;
+      ? `Loaded ${img.naturalWidth}×${img.naturalHeight}.`
+      : `Loaded ${img.naturalWidth}×${img.naturalHeight}. Click Convert to start.`;
     if ($("auto").checked) paint();
   };
-  img.onerror = () => { $("status").textContent = "讀唔到呢張圖。"; };
+  img.onerror = () => { $("status").textContent = "Could not read this image."; };
   img.src = url;
 }
 
@@ -486,14 +486,14 @@ function syncUi() {
   $("aspectVal").textContent = Number(aspectEl.value).toFixed(2);
   $("startVal").textContent = `${$("start").value}°`;
   const notes = {
-    side: "圓心當望前。裁切係圓頂同圓底各佔幾多像素。",
-    bottom: "圓心當望天。裁切係圓心面積。預設 3%。0% 先可以調寬高比。",
-    top: "圓心當望下。裁切係行星圓心面積。預設 3%。圓外高過 18° 嘅天空固定唔包。",
+    side: "The centre is looking forward. Crop is the share of pixels cut from the top and the bottom of the circle.",
+    bottom: "The centre is looking up. Crop is the area of the centre. Default 3%. Aspect ratio is available only at 0%.",
+    top: "The centre is looking down. Crop is the area of the planet centre. Default 3%. Sky more than 18° outside the circle is always left out.",
   };
   const crops = {
-    side: "頂同底各裁走幾多個圓入面嘅像素。0% 代表唔裁。",
-    bottom: "裁走圓心幾多面積。3% 大約向上 74°。0% 代表正上方都留低。",
-    top: "裁走行星圓心幾多面積。3% 大約向下 70°。0% 代表正下方都留低。",
+    side: "How much of the circle is removed at the top and at the bottom. 0% means no crop.",
+    bottom: "How much of the centre is removed. 3% reaches about 74° upward. 0% keeps straight up.",
+    top: "How much of the planet centre is removed. 3% reaches about 70° downward. 0% keeps straight down.",
   };
   $("viewNote").textContent = notes[view];
   $("cropNote").textContent = crops[view];
@@ -538,7 +538,7 @@ syncUi();
 </script>
 <footer class="disclaimer">
   <p><strong>Disclaimer.</strong> No image is uploaded to any server. All processing stays on your device, in this browser, using plain JavaScript only. No image library or other third-party code is used.</p>
-  <p>免責聲明：圖片唔會上傳到任何伺服器。所有處理都留喺你部裝置嘅瀏覽器入面，只用純 JavaScript，冇用任何外加程式庫。</p>
+  
 </footer>
 </body>
 </html>
