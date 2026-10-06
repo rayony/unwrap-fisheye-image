@@ -26,10 +26,11 @@ Unwrap a circular fisheye, an upward fisheye, or a tiny-planet photo into a norm
 6. Tick **Flip left–right** if the result is mirrored.
 7. On the result, drag the gold box or pull a handle. **Cut left / top / right / bottom** do the same thing. The dimmed part is left out.
 8. Click **Save JPEG**. Only the box is saved.
+9. Click **Copy parameters** to paste the same settings into `UnwrapFisheye.unwrap(image, params)`.
 
 **Convert automatically after upload** is on by default. Turn it off to convert only when you click **Convert**.
 
-(Alternatively, you can choose to download the HTML file and run it totally offline)
+(You can also download `index.html`, `en.html`, and `unwrap-fisheye.js` into the same folder and run them offline.)
 
 ## 點用
 
@@ -50,10 +51,46 @@ Unwrap a circular fisheye, an upward fisheye, or a tiny-planet photo into a norm
 6. 需要時剔「左右反轉」。
 7. 喺結果圖拖金框，或者拉角同邊。**結果左裁／上裁／右裁／下裁**係同一件事。變暗嘅部分唔會留。
 8. 撳「儲存 JPEG」。只存框入面。
+9. 撳「複製參數」，就可以用 `UnwrapFisheye.unwrap(image, params)` 重做同一張結果。
 
 「上傳後自動展開」預設開住。取消之後，要自己撳「展開」先轉換。
 
-(你亦可以選擇下載相關HTML檔案,直接離線使用)
+(你亦可以下載 `index.html`、`en.html` 同 `unwrap-fisheye.js`，放喺同一個資料夾離線用。)
+
+## Library / 程式庫
+
+[unwrap-fisheye.js](unwrap-fisheye.js) is the same unwrap the page uses. No other library. Nothing is uploaded.
+
+[unwrap-fisheye.js](unwrap-fisheye.js) 就係頁面用緊嘅同一套展開。唔使其他程式庫。圖片唔會上傳。
+
+On the page, click **Copy parameters** / **複製參數**. Paste that into your own page, with the same image:
+
+喺頁面撳「複製參數」，貼去你自己嘅頁，再用同一張圖：
+
+```html
+<script src="https://rayony.github.io/unwrap-fisheye-image/unwrap-fisheye.js"></script>
+<script>
+  const params = {
+    view: "side",
+    crop: 1,
+    aspect: 1.58,
+    start: 0,
+    cx: 0,
+    cy: 0,
+    radius: 100,
+    mirror: false,
+    maxSide: 1800,
+    trim: { left: 0, top: 0, right: 0, bottom: 0 }
+  };
+  const result = await UnwrapFisheye.unwrap(image, params);
+  // result.canvas is the same picture as Save JPEG, including the crop.
+  // Call unwrap from an async function. image can be an <img> or a canvas.
+</script>
+```
+
+`image` can be an `<img>`, a canvas, or `ImageData`. `maxSide` defaults to 1800, the same shrink the page uses. `trim` is the result crop, in percent from each edge. `cx` / `cy` are percent from the middle of the photo; right and down are positive. `radius` 100 touches the shorter side.
+
+`image` 可以係 `<img>`、canvas 或者 `ImageData`。`maxSide` 預設 1800，同頁面一樣先縮細。`trim` 係結果裁切，每邊幾多個百分比。`cx`／`cy` 係離相片中心嘅百分比，右同下係正數。`radius` 100 貼住較短邊。
 
 ## Privacy / 私隱
 
@@ -63,8 +100,9 @@ No image is uploaded to any server. Processing stays on your device, in the brow
 
 ## Files / 檔案
 
-- `index.html` — Chinese page. One file, works offline.
+- `index.html` — Chinese page.
 - `en.html` — English page. Same tool.
+- `unwrap-fisheye.js` — library. Same result as the page, including the crop. / 程式庫，結果同頁面一樣，連裁切都一樣。
 - `sample-fisheye.png` — diagram of the three views and the two crop settings.
 - `try-fisheye.jpg` — side-view sample. `try-fisheye-bottom.jpg` — looking up. `try-fisheye-top.jpg` — tiny planet.
 - 三張試用相：側面 `try-fisheye.jpg`、底視 `try-fisheye-bottom.jpg`、頂視 `try-fisheye-top.jpg`。
