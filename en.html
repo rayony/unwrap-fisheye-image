@@ -34,6 +34,10 @@
   #status { margin-top:10px; min-height:2.4em; color:var(--muted); font-size:12px; }
   footer.disclaimer { padding:14px 18px 22px; border-top:1px solid var(--line); color:var(--muted); font-size:12px; line-height:1.5; }
   footer.disclaimer strong { color:var(--text); font-weight:600; }
+  .explain { padding:8px 18px 18px; color:var(--muted); font-size:14px; line-height:1.55; max-width:52rem; }
+  .explain h2 { margin:18px 0 6px; color:var(--text); font-size:16px; }
+  .explain h3 { margin:14px 0 4px; color:var(--text); font-size:14px; }
+  .explain p { margin:6px 0; }
   @media (max-width:860px) {
     main { grid-template-columns:1fr; }
     aside { border-right:0; border-bottom:1px solid var(--line); }
@@ -536,6 +540,22 @@ $("save").addEventListener("click", () => {
 });
 syncUi();
 </script>
+<section class="explain">
+  <h2>How the picture is unwrapped</h2>
+  <p>The round photo is like a round window that has squashed the view into a circle. This page spreads that circle back into a rectangle.</p>
+  <h3>Side view</h3>
+  <p>The middle of the circle is looking straight ahead. Left and right mean turning your head. Up and down mean looking up or down. The very top of the circle is almost straight up. The very bottom is almost straight down.</p>
+  <h3>Bottom view</h3>
+  <p>The middle of the circle is the sky above your head. The edge of the circle is the horizon, where the buildings meet the sky. Walking around the circle is turning your whole body around, so the result is a long panorama.</p>
+  <h3>Top view</h3>
+  <p>This is a tiny planet. The middle is the ground under your feet. The round edge of the city is the horizon. The blue outside the circle is already sky. Walking around the circle is turning all the way around again.</p>
+  <h3>Crop more than 0%</h3>
+  <p>We snip off the part that would stretch the most, then unroll the rest like a poster wrapped around a tube. The further you look up or down, the taller that part has to be drawn, so buildings look more natural. We have to stop before straight up or straight down, or the poster would need to be endlessly long.</p>
+  <p>Side view snips the top and the bottom of the circle. Bottom view snips a small dot of sky in the middle. Top view snips a small dot of ground in the middle of the planet, and also leaves out sky more than 18° outside the circle.</p>
+  <h3>Crop at 0%</h3>
+  <p>The whole circle stays, even straight up or straight down. The tube trick cannot do that, because that one direction would need an infinitely long poster. So we use a gentler stretch. The middle still looks a bit like the tube, but the stretch slows down near the edge, and the whole circle fits. You use the slider to choose how tall or how wide the poster is.</p>
+  <p>The very top or very bottom edge of the result is really just one point of the photo, pulled into a line, so it looks smeared. That is the price of not cutting anything.</p>
+</section>
 <footer class="disclaimer">
   <p><strong>Disclaimer.</strong> No image is uploaded to any server. All processing stays on your device, in this browser, using plain JavaScript only. No image library or other third-party code is used.</p>
   
