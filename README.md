@@ -73,11 +73,11 @@ Imagine the round photo as a round window that squashed the view into a circle. 
 
 圓相好似一扇圓窗，把景色壓入一個圓。呢頁把個圓攤返做長方形。
 
-### The gold ring / 金色圓
+### The golden circle / 金色圓
 
-The page does not find the circle for you. The cross is the centre, and the ring is the radius. Match the ring to the edge of the round photo first. Every view, and both crop settings, use that same circle.
+The page defaults the center of the circle to the center of the image.  User may adjust the center (the crossmark) and the area of the image / radius (golden circle) after loading the image.  Recommended to match the golden circle to the edge of the image before start the conversion.
 
-頁面唔會自動搵個圓。十字係圓心，金圈係半徑。展開之前，先把金圈對準圓相邊。三個視角、兩種裁切都用同一個圓。
+頁面預設圓心等於圖片正中間，載入圖片後可自行調教圓心(十字)及圓形範圍/半徑(金圈)， 建議展開之前，先把金圈對準圓邊。
 
 ![三種視角 × 兩種裁切。紅色係預設剪走，金框係輸出形狀。 Red is the default crop. The gold box is the output shape.](sample-fisheye.png)
 
