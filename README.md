@@ -20,6 +20,8 @@ Unwrap a circular fisheye, an upward fisheye, or a tiny-planet photo into a norm
 
 **Convert automatically after upload** is on by default. Turn it off to convert only when you click **Convert**.
 
+(Alternatively, you can choose to download the HTML file and run it totally offline)
+
 ## 點用
 
 1. 打開上面任一頁。
@@ -32,6 +34,8 @@ Unwrap a circular fisheye, an upward fisheye, or a tiny-planet photo into a norm
 5. 撳「儲存 JPEG」。
 
 「上傳後自動展開」預設開住。取消之後，要自己撳「展開」先轉換。
+
+(你亦可以選擇下載相關HTML檔案,直接離線使用)
 
 ## Privacy / 私隱
 
