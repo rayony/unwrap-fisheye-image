@@ -10,13 +10,14 @@ Unwrap a circular fisheye, an upward fisheye, or a tiny-planet photo into a norm
 ## How to use
 
 1. Open either page above.
-2. Drop or choose a JPEG or PNG.
-3. Pick a view:
+2. Optional: download [try-fisheye.jpg](try-fisheye.jpg), then drop that file onto the page (or use Choose image). It is a circular side-view fisheye.
+3. Or drop your own JPEG or PNG.
+4. Pick a view:
    - **Side (looking forward):** the centre is ahead. Crop the top and bottom of the circle. At 0% the whole circle is kept, then set height ÷ width.
    - **Bottom (looking up):** the centre is straight up. Crop the centre and set where the circle starts.
    - **Top (tiny planet / looking down):** the centre is straight down. Crop the planet centre and set the start angle.
-4. Tick **Flip left–right** if the result is mirrored.
-5. Click **Save JPEG**.
+5. Tick **Flip left–right** if the result is mirrored.
+6. Click **Save JPEG**.
 
 **Convert automatically after upload** is on by default. Turn it off to convert only when you click **Convert**.
 
@@ -25,13 +26,14 @@ Unwrap a circular fisheye, an upward fisheye, or a tiny-planet photo into a norm
 ## 點用
 
 1. 打開上面任一頁。
-2. 拖入或選擇一張 JPEG／PNG。
-3. 揀視角：
+2. 可以先下載 [try-fisheye.jpg](try-fisheye.jpg)，再拖返頁面（或者撳「選擇圖片」）。呢張係側面圓形魚眼。
+3. 或者直接拖入你自己嘅 JPEG／PNG。
+4. 揀視角：
    - **側面（望前）**：圓心係前方。可調上下裁切；0% 會保留成個圓，再揀高÷寬。
    - **底視（望天）**：圓心係正上方。可調圓心裁切同圓周起點。
    - **頂視（小行星／望下）**：圓心係正下方。可調行星圓心裁切同圓周起點。
-4. 需要時剔「左右反轉」。
-5. 撳「儲存 JPEG」。
+5. 需要時剔「左右反轉」。
+6. 撳「儲存 JPEG」。
 
 「上傳後自動展開」預設開住。取消之後，要自己撳「展開」先轉換。
 
@@ -48,7 +50,8 @@ No image is uploaded to any server. Processing stays on your device, in the brow
 - `index.html` — Chinese page. One file, works offline.
 - `en.html` — English page. Same tool.
 - `sample-fisheye.png` — diagram of the three views and the two crop settings.
-- 示範圖係 `sample-fisheye.png`。
+- `try-fisheye.jpg` — a circular fisheye you can download and upload into the page.
+- 試用相係 `try-fisheye.jpg`，下載後再上傳到頁面。
 
 ## How it works / 點樣拆
 
