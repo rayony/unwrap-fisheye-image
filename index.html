@@ -440,23 +440,44 @@ function shadeRemoved(cx, cy, r) {
 
 function fillCap(cx, cy, r, phiMax, sign) {
   const t0 = phiMax / (Math.PI / 2);
-  const left = [], right = [];
+  const edge = [];
   for (let i = 0; i <= 48; i++) {
     const rn = t0 + (1 - t0) * (i / 48);
     const theta = rn * Math.PI / 2;
     const iy = Math.sin(phiMax) * rn / Math.sin(theta);
     const ix = Math.sqrt(Math.max(0, rn * rn - iy * iy));
-    const y = cy - sign * iy * r;
-    left.push([cx - ix * r, y]);
-    right.push([cx + ix * r, y]);
+    edge.push([ix, iy]);
   }
-  const a0 = Math.atan2(left[left.length - 1][1] - cy, left[left.length - 1][0] - cx);
-  const a1 = Math.atan2(right[right.length - 1][1] - cy, right[right.length - 1][0] - cx);
+  const iyEdge = edge[edge.length - 1][1];
+  const ixEdge = edge[edge.length - 1][0];
+  const leftAng = Math.atan2(-sign * iyEdge, -ixEdge);
+  const rightAng = Math.atan2(-sign * iyEdge, ixEdge);
+  const poleAng = Math.atan2(-sign, 0);
+  const sweep = (from, to, ccw) => {
+    let s = to - from;
+    if (ccw) { if (s <= 0) s += Math.PI * 2; }
+    else if (s >= 0) s -= Math.PI * 2;
+    return s;
+  };
+  const holds = (from, span, target) => {
+    let d = target - from;
+    if (span >= 0) {
+      while (d < 0) d += Math.PI * 2;
+      return d <= span + 1e-3;
+    }
+    while (d > 0) d -= Math.PI * 2;
+    return d >= span - 1e-3;
+  };
+  let span = sweep(leftAng, rightAng, true);
+  if (!holds(leftAng, span, poleAng)) span = sweep(leftAng, rightAng, false);
   srcCtx.beginPath();
-  srcCtx.moveTo(left[0][0], left[0][1]);
-  for (const p of left) srcCtx.lineTo(p[0], p[1]);
-  srcCtx.arc(cx, cy, r, a0, a1, sign > 0);
-  for (let i = right.length - 1; i >= 0; i--) srcCtx.lineTo(right[i][0], right[i][1]);
+  srcCtx.moveTo(cx - edge[0][0] * r, cy - sign * edge[0][1] * r);
+  for (const p of edge) srcCtx.lineTo(cx - p[0] * r, cy - sign * p[1] * r);
+  for (let i = 0; i <= 36; i++) {
+    const a = leftAng + span * (i / 36);
+    srcCtx.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+  }
+  for (let i = edge.length - 1; i >= 0; i--) srcCtx.lineTo(cx + edge[i][0] * r, cy - sign * edge[i][1] * r);
   srcCtx.closePath();
   srcCtx.fill();
 }
