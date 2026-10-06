@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>魚眼展開</title>
+<style>
+  :root { color-scheme: dark; --bg:#12110e; --panel:#1c1a16; --line:#3a342c; --text:#f4efe6; --muted:#a39888; --accent:#e0a15a; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:14px/1.45 "Segoe UI", "PingFang HK", "Noto Sans TC", sans-serif; background:var(--bg); color:var(--text); }
+  header { padding:14px 18px; border-bottom:1px solid var(--line); }
+  header h1 { margin:0; font-size:18px; font-weight:600; }
+  header p { margin:4px 0 0; color:var(--muted); font-size:12px; max-width:62rem; }
+  main { display:grid; grid-template-columns:300px 1fr; min-height:calc(100vh - 72px); }
+  aside { padding:14px; border-right:1px solid var(--line); background:var(--panel); }
+  label { display:block; margin:12px 0 4px; color:var(--muted); font-size:12px; }
+  input[type="range"] { width:100%; accent-color:var(--accent); }
+  select, button { width:100%; background:#2a261f; color:var(--text); border:1px solid var(--line); border-radius:6px; padding:8px; }
+  button { margin-top:12px; background:var(--accent); color:#1c140c; font-weight:650; cursor:pointer; border:0; }
+  button.ghost { background:transparent; color:var(--text); border:1px solid var(--line); }
+  button:disabled { opacity:.45; cursor:default; }
+  .val { color:var(--text); }
+  .note { margin:8px 0 0; color:var(--muted); font-size:12px; }
+  .check { display:flex; gap:8px; align-items:center; margin-top:14px; color:var(--text); font-size:13px; }
+  .check input { accent-color:var(--accent); width:16px; height:16px; }
+  .stage { padding:14px; display:grid; grid-template-columns:1fr 1fr; gap:12px; align-content:start; }
+  figure { margin:0; background:#0c0b09; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  figcaption { padding:8px 10px; color:var(--muted); font-size:12px; }
+  img, canvas { width:100%; height:auto; display:block; background:#111; max-height:78vh; object-fit:contain; }
+  .drop { margin-top:4px; border:1px dashed #555; border-radius:8px; padding:18px 12px; text-align:center; color:var(--muted); cursor:pointer; }
+  .drop.over { border-color:var(--accent); color:var(--text); }
+  #status { margin-top:10px; min-height:2.4em; color:var(--muted); font-size:12px; }
+  footer.disclaimer { padding:14px 18px 22px; border-top:1px solid var(--line); color:var(--muted); font-size:12px; line-height:1.5; }
+  footer.disclaimer strong { color:var(--text); font-weight:600; }
+  @media (max-width:860px) {
+    main { grid-template-columns:1fr; }
+    aside { border-right:0; border-bottom:1px solid var(--line); }
+    .stage { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>魚眼展開</h1>
+  <p>側面、頂視、底視都可以調裁切。0% 先改用有限投影，成個圓留低，再揀寬高比。</p>
+</header>
+<main>
+  <aside>
+    <div class="drop" id="drop">拖入 JPEG／PNG，或撳下面揀檔</div>
+    <input id="file" type="file" accept="image/jpeg,image/png,image/webp" hidden />
+    <button id="pick" type="button">選擇圖片</button>
+
+    <label>視角</label>
+    <select id="view">
+      <option value="side" selected>側面（望前）</option>
+      <option value="bottom">底視（望天）</option>
+      <option value="top">頂視（小行星／望下）</option>
+    </select>
+    <p class="note" id="viewNote"></p>
+
+    <div id="cropWrap">
+      <label>輸出裁切 <span class="val" id="cropVal">1%</span></label>
+      <input id="crop" type="range" min="0" max="10" value="1" step="1" />
+      <p class="note" id="cropNote">頂同底各裁走幾多個圓入面嘅像素。0% 代表唔裁。</p>
+    </div>
+
+    <div id="aspectWrap" hidden>
+      <label><span id="aspectName">高 ÷ 寬</span> <span class="val" id="aspectVal">1.58</span></label>
+      <input id="aspect" type="range" min="1" max="2" value="1.58" step="0.01" />
+      <p class="note" id="aspectNote">0% 裁切先用。1 係正方形，2 係高兩倍。預設 1.58。</p>
+    </div>
+
+    <div id="startWrap" hidden>
+      <label>起點 <span class="val" id="startVal">0°</span></label>
+      <input id="start" type="range" min="0" max="360" value="0" step="1" />
+      <p class="note">圓周由邊一度開始拆。0° 係圓嘅右面，轉一圈會返到同一張相。</p>
+    </div>
+
+    <label class="check"><input id="auto" type="checkbox" checked /> 上傳後自動展開</label>
+    <label class="check"><input id="mirror" type="checkbox" /> 左右反轉</label>
+
+    <button id="go" type="button" disabled>展開</button>
+    <button id="save" class="ghost" type="button" disabled>儲存 JPEG</button>
+    <p id="status">未有圖片。</p>
+  </aside>
+  <section class="stage">
+    <figure>
+      <figcaption>原圖</figcaption>
+      <canvas id="src"></canvas>
+    </figure>
+    <figure>
+      <figcaption id="outCap">結果</figcaption>
+      <canvas id="dst"></canvas>
+    </figure>
+  </section>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const fileEl = $("file");
+const viewEl = $("view");
+const cropEl = $("crop");
+const aspectEl = $("aspect");
+const mirrorEl = $("mirror");
+let srcCanvas, srcCtx, srcW, srcH, srcData;
+let blobUrl = null;
+let job = 0;
+
+function capFraction(phiMax) {
+  const N = 140;
+  let inside = 0, cap = 0;
+  for (let iy = 0; iy < N; iy++) {
+    const y = ((iy + 0.5) / N) * 2 - 1;
+    for (let ix = 0; ix < N; ix++) {
+      const x = ((ix + 0.5) / N) * 2 - 1;
+      const r = Math.hypot(x, y);
+      if (r > 1) continue;
+      inside++;
+      const theta = r * Math.PI / 2;
+      const phi = Math.asin(Math.max(-1, Math.min(1, Math.sin(theta) * (y / Math.max(r, 1e-9)))));
+      if (phi > phiMax) cap++;
+    }
+  }
+  return cap / inside;
+}
+
+function phiMaxForCrop(pct) {
+  const target = pct / 100;
+  let lo = 45 * Math.PI / 180, hi = 89.2 * Math.PI / 180;
+  for (let i = 0; i < 22; i++) {
+    const mid = (lo + hi) / 2;
+    if (capFraction(mid) > target) lo = mid;
+    else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+
+function aspectOf(a) {
+  return (2 * a * Math.tan(Math.PI / (2 * a))) / Math.PI;
+}
+
+function aForAspect(aspect) {
+  let lo = 1.02, hi = 24;
+  for (let i = 0; i < 36; i++) {
+    const mid = (lo + hi) / 2;
+    if (aspectOf(mid) > aspect) lo = mid;
+    else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+
+function aForYMax(ymax) {
+  if (ymax <= Math.PI / 2 + 0.015) return Infinity;
+  let lo = 1.02, hi = 48;
+  for (let i = 0; i < 40; i++) {
+    const mid = (lo + hi) / 2;
+    const y = mid * Math.tan(Math.PI / (2 * mid));
+    if (y > ymax) lo = mid;
+    else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+
+function aForTopSpan(span, emax) {
+  if (span <= emax + Math.PI / 2 + 0.015) return Infinity;
+  let lo = 1.02, hi = 48;
+  for (let i = 0; i < 40; i++) {
+    const mid = (lo + hi) / 2;
+    const y = mid * Math.tan(emax / mid) + mid * Math.tan(Math.PI / (2 * mid));
+    if (y > span) lo = mid;
+    else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+
+const VIEW_DEFAULTS = {
+  side: { crop: 1, aspectMin: 1, aspectMax: 2, aspect: 1.58, aspectName: "高 ÷ 寬", aspectNote: "0% 先用。1 係正方形，2 係高兩倍。預設 1.58。" },
+  bottom: { crop: 3, aspectMin: 2, aspectMax: 3.8, aspect: 2.5, aspectName: "寬 ÷ 高", aspectNote: "0% 先用。2 較高，3.8 接近等距（最闊）。預設 2.5。" },
+  top: { crop: 3, aspectMin: 1.6, aspectMax: 3.2, aspect: 2.2, aspectName: "寬 ÷ 高", aspectNote: "0% 先用。1.6 較高，3.2 接近等距（最闊）。預設 2.2。" },
+};
+
+function bboxContent(pred) {
+  let minX = srcW, minY = srcH, maxX = 0, maxY = 0, n = 0;
+  const step = Math.max(1, Math.floor(Math.min(srcW, srcH) / 280));
+  for (let y = 0; y < srcH; y += step) {
+    for (let x = 0; x < srcW; x += step) {
+      if (!pred((y * srcW + x) * 4)) continue;
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x > maxX) maxX = x;
+      if (y > maxY) maxY = y;
+      n++;
+    }
+  }
+  if (n < 8) return { cx: (srcW - 1) / 2, cy: (srcH - 1) / 2, r: Math.min(srcW, srcH) * 0.45 };
+  const bw = maxX - minX, bh = maxY - minY;
+  const touchV = minY <= step * 2 || maxY >= srcH - step * 2;
+  const touchH = minX <= step * 2 || maxX >= srcW - step * 2;
+  const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+  let r = Math.min(bw, bh) / 2;
+  if (touchV && !touchH) r = bw / 2;
+  else if (touchH && !touchV) r = bh / 2;
+  return { cx, cy, r };
+}
+
+function detectSide() {
+  const cr = srcData[0], cg = srcData[1], cb = srcData[2];
+  return bboxContent((i) => Math.hypot(srcData[i] - cr, srcData[i + 1] - cg, srcData[i + 2] - cb) > 32);
+}
+
+function detectBottom() {
+  return bboxContent((i) => srcData[i] > 16 || srcData[i + 1] > 16 || srcData[i + 2] > 16);
+}
+
+function detectTop() {
+  const N = 120;
+  const lum = new Float32Array(N * N);
+  for (let y = 0; y < N; y++) {
+    const iy = Math.min(srcH - 1, ((y + 0.5) * srcH / N) | 0);
+    for (let x = 0; x < N; x++) {
+      const ix = Math.min(srcW - 1, ((x + 0.5) * srcW / N) | 0);
+      const i = (iy * srcW + ix) * 4;
+      lum[y * N + x] = (srcData[i] + srcData[i + 1] + srcData[i + 2]) / 3;
+    }
+  }
+  const vari = new Float32Array(N * N);
+  for (let y = 1; y < N - 1; y++) {
+    for (let x = 1; x < N - 1; x++) {
+      let s = 0, s2 = 0;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const v = lum[(y + dy) * N + x + dx];
+        s += v; s2 += v * v;
+      }
+      const m = s / 9;
+      vari[y * N + x] = s2 / 9 - m * m;
+    }
+  }
+  function ring(cx, cy, r0, r1) {
+    let s = 0, n = 0;
+    const a = r0 * r0, b = r1 * r1;
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const d2 = (x - cx) ** 2 + (y - cy) ** 2;
+      if (d2 >= a && d2 < b) { s += vari[y * N + x]; n++; }
+    }
+    return n ? s / n : 0;
+  }
+  let best = -1e9, bcx = N / 2, bcy = N * 0.46;
+  for (let cy = (N * 0.3) | 0; cy < N * 0.65; cy += 3) {
+    for (let cx = (N * 0.3) | 0; cx < N * 0.7; cx += 3) {
+      const score = ring(cx, cy, N * 0.16, N * 0.28) - ring(cx, cy, N * 0.36, N * 0.46);
+      if (score > best) { best = score; bcx = cx; bcy = cy; }
+    }
+  }
+  let prev = ring(bcx, bcy, 8, 14), dropR = N * 0.32, bestDrop = 0;
+  for (let r = 16; r < N * 0.48; r += 2) {
+    const now = ring(bcx, bcy, r, r + 6);
+    if (prev - now > bestDrop) { bestDrop = prev - now; dropR = r + 3; }
+    prev = now;
+  }
+  return { cx: bcx * srcW / N, cy: bcy * srcH / N, r: dropR * (srcW + srcH) / (2 * N) };
+}
+
+function sample(x, y) {
+  if (x < 0 || y < 0 || x >= srcW - 1 || y >= srcH - 1) return null;
+  const x0 = x | 0, y0 = y | 0, tx = x - x0, ty = y - y0;
+  const i00 = (y0 * srcW + x0) * 4;
+  const i10 = i00 + 4, i01 = i00 + srcW * 4, i11 = i01 + 4;
+  const rgb = [0, 0, 0];
+  for (let c = 0; c < 3; c++) {
+    const a = srcData[i00 + c] * (1 - tx) + srcData[i10 + c] * tx;
+    const b = srcData[i01 + c] * (1 - tx) + srcData[i11 + c] * tx;
+    rgb[c] = a * (1 - ty) + b * ty;
+  }
+  return rgb;
+}
+
+function buildPlan() {
+  const view = viewEl.value;
+  const crop = Number(cropEl.value);
+  const aspect = Number(aspectEl.value);
+  const mirror = mirrorEl.checked;
+  const start = Number($("start").value) * Math.PI / 180;
+  const az = (x, width) => {
+    const lam0 = ((x + 0.5) / width) * Math.PI * 2 + start;
+    return mirror ? lam0 : -lam0;
+  };
+  const disk = view === "top" ? detectTop() : view === "bottom" ? detectBottom() : detectSide();
+  const { cx, cy, r } = disk;
+  let W, H, summary, ray;
+
+  if (view === "side") {
+    W = Math.max(720, Math.min(1100, Math.round(r * 2)));
+    if (crop > 0) {
+      const phiMax = phiMaxForCrop(crop);
+      H = Math.max(2, Math.round(W * 2 * Math.tan(phiMax) / Math.PI));
+      const t = Math.tan(phiMax);
+      ray = (x, y) => {
+        const lam = (mirror ? -1 : 1) * ((x + 0.5) / W - 0.5) * Math.PI;
+        const phi = Math.atan((0.5 - (y + 0.5) / H) * 2 * t);
+        return fishRay(lam, phi);
+      };
+      summary = `側面，上下各裁 ${crop}%（約 ±${(phiMax * 180 / Math.PI).toFixed(1)}°）。高÷寬 ${(H / W).toFixed(2)}。`;
+    } else {
+      const a = aForAspect(aspect);
+      H = Math.max(2, Math.round(W * aspect));
+      const tmax = Math.tan(Math.PI / (2 * a));
+      ray = (x, y) => {
+        const lam = (mirror ? -1 : 1) * ((x + 0.5) / W - 0.5) * Math.PI;
+        const n = 1 - 2 * (y + 0.5) / H;
+        const phi = a * Math.atan(n * tmax);
+        return fishRay(lam, phi);
+      };
+      summary = `側面，0% 裁切，成個圓留低。高÷寬 ${aspect.toFixed(2)}。`;
+    }
+    function fishRay(lam, phi) {
+      const cphi = Math.cos(phi);
+      const dx = Math.sin(lam) * cphi;
+      const dy = Math.sin(phi);
+      const dz = Math.cos(lam) * cphi;
+      const rad = Math.hypot(dx, dy) || 1e-8;
+      const theta = Math.atan2(rad, dz);
+      const rf = theta / (Math.PI / 2) * r;
+      if (rf > r + 1.2) return null;
+      return { sx: cx + rf * dx / rad, sy: cy - rf * dy / rad };
+    }
+  } else if (view === "bottom") {
+    W = 1200;
+    if (crop > 0) {
+      const elevMax = (Math.PI / 2) * (1 - Math.sqrt(crop / 100));
+      H = Math.max(2, Math.round(W * Math.tan(elevMax) / (2 * Math.PI)));
+      const t = Math.tan(elevMax);
+      ray = (x, y) => {
+        const lam = az(x, W);
+        const elev = Math.atan((1 - (y + 0.5) / H) * t);
+        const rr = r * (Math.PI / 2 - elev) / (Math.PI / 2);
+        return { sx: cx + rr * Math.cos(lam), sy: cy + rr * Math.sin(lam) };
+      };
+      summary = `底視，圓心裁 ${crop}%（向上約 ${(elevMax * 180 / Math.PI).toFixed(0)}°）。寬÷高 ${(W / H).toFixed(2)}。`;
+    } else {
+      const ymax = (2 * Math.PI) / aspect;
+      const a = aForYMax(ymax);
+      H = Math.max(2, Math.round(W / aspect));
+      ray = (x, y) => {
+        const lam = az(x, W);
+        const n = 1 - (y + 0.5) / H;
+        const elev = Number.isFinite(a) ? a * Math.atan(n * Math.tan(Math.PI / (2 * a))) : n * Math.PI / 2;
+        const rr = r * (Math.PI / 2 - elev) / (Math.PI / 2);
+        return { sx: cx + rr * Math.cos(lam), sy: cy + rr * Math.sin(lam) };
+      };
+      summary = `底視，0% 裁切，圓心留低。寬÷高 ${aspect.toFixed(2)}。頂邊係正上方拉成一條線。`;
+    }
+  } else {
+    W = 1400;
+    const emax = 18 * Math.PI / 180;
+    if (crop > 0) {
+      const emin = 2 * Math.atan(Math.sqrt(crop / 100)) - Math.PI / 2;
+      const span = Math.tan(emax) - Math.tan(emin);
+      H = Math.max(2, Math.round(W * span / (2 * Math.PI)));
+      ray = (x, y) => {
+        const lam = az(x, W);
+        const tv = Math.tan(emax) + (Math.tan(emin) - Math.tan(emax)) * (y + 0.5) / H;
+        const elev = Math.atan(tv);
+        const psi = elev + Math.PI / 2;
+        const rr = r * Math.tan(psi / 2);
+        return { sx: cx + rr * Math.cos(lam), sy: cy + rr * Math.sin(lam) };
+      };
+      summary = `頂視，行星圓心裁 ${crop}%（向下約 ${( -emin * 180 / Math.PI).toFixed(0)}°）。寬÷高 ${(W / H).toFixed(2)}。圓外高過 18° 嘅天空唔包。`;
+    } else {
+      const ehi = 20 * Math.PI / 180;
+      const spanWant = (2 * Math.PI) / aspect;
+      const a = aForTopSpan(spanWant, ehi);
+      H = Math.max(2, Math.round(W / aspect));
+      const tTop = Number.isFinite(a) ? a * Math.tan(ehi / a) : ehi;
+      const tBot = Number.isFinite(a) ? -a * Math.tan(Math.PI / (2 * a)) : -Math.PI / 2;
+      ray = (x, y) => {
+        const lam = az(x, W);
+        const tv = tTop + (tBot - tTop) * (y + 0.5) / H;
+        const elev = Number.isFinite(a) ? a * Math.atan(tv / a) : tv;
+        const psi = elev + Math.PI / 2;
+        const rr = r * Math.tan(Math.max(0, psi) / 2);
+        return { sx: cx + rr * Math.cos(lam), sy: cy + rr * Math.sin(lam) };
+      };
+      summary = `頂視，0% 裁切，行星圓心留低。寬÷高 ${aspect.toFixed(2)}。底邊係正下方拉成一條線。`;
+    }
+  }
+
+  const scale = Math.min(1, 4200000 / (W * H));
+  if (scale < 1) {
+    const W2 = Math.max(2, Math.round(W * scale));
+    const H2 = Math.max(2, Math.round(H * scale));
+    const ox = ray;
+    ray = (x, y) => ox(x * (W - 1) / (W2 - 1), y * (H - 1) / (H2 - 1));
+    W = W2; H = H2;
+  }
+  if (mirror) summary += " 已左右反轉。";
+  return { W, H, ray, summary };
+}
+
+function paint() {
+  if (!srcData) return;
+  const token = ++job;
+  $("go").disabled = true;
+  $("save").disabled = true;
+  $("status").textContent = "展開中…";
+  const plan = buildPlan();
+  const dst = $("dst");
+  dst.width = plan.W;
+  dst.height = plan.H;
+  const ctx = dst.getContext("2d", { willReadFrequently: true });
+  const img = ctx.createImageData(plan.W, plan.H);
+  const od = img.data;
+  let y = 0;
+  const rows = plan.H > 1600 ? 4 : 12;
+  const step = () => {
+    if (token !== job) return;
+    const y1 = Math.min(plan.H, y + rows);
+    for (; y < y1; y++) {
+      for (let x = 0; x < plan.W; x++) {
+        const i = (y * plan.W + x) * 4;
+        const hit = plan.ray(x, y);
+        const rgb = hit ? sample(hit.sx, hit.sy) : null;
+        od[i] = rgb ? rgb[0] : 255;
+        od[i + 1] = rgb ? rgb[1] : 255;
+        od[i + 2] = rgb ? rgb[2] : 255;
+        od[i + 3] = 255;
+      }
+    }
+    if (y < plan.H) {
+      $("status").textContent = `展開中 ${Math.round(100 * y / plan.H)}%`;
+      requestAnimationFrame(step);
+    } else {
+      ctx.putImageData(img, 0, 0);
+      $("outCap").textContent = `結果 ${plan.W}×${plan.H}`;
+      $("status").textContent = plan.summary;
+      $("go").disabled = false;
+      $("save").disabled = false;
+    }
+  };
+  requestAnimationFrame(step);
+}
+
+function loadFile(file) {
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = () => {
+    URL.revokeObjectURL(url);
+    const maxSide = 1800;
+    const sc = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+    srcW = Math.max(2, Math.round(img.naturalWidth * sc));
+    srcH = Math.max(2, Math.round(img.naturalHeight * sc));
+    srcCanvas = $("src");
+    srcCanvas.width = srcW;
+    srcCanvas.height = srcH;
+    srcCtx = srcCanvas.getContext("2d", { willReadFrequently: true });
+    srcCtx.drawImage(img, 0, 0, srcW, srcH);
+    srcData = srcCtx.getImageData(0, 0, srcW, srcH).data;
+    $("go").disabled = false;
+    $("status").textContent = $("auto").checked
+      ? `已載入 ${img.naturalWidth}×${img.naturalHeight}。`
+      : `已載入 ${img.naturalWidth}×${img.naturalHeight}。撳「展開」先轉換。`;
+    if ($("auto").checked) paint();
+  };
+  img.onerror = () => { $("status").textContent = "讀唔到呢張圖。"; };
+  img.src = url;
+}
+
+function applyViewDefaults() {
+  const d = VIEW_DEFAULTS[viewEl.value];
+  cropEl.value = d.crop;
+  aspectEl.min = d.aspectMin;
+  aspectEl.max = d.aspectMax;
+  aspectEl.value = d.aspect;
+  $("aspectName").textContent = d.aspectName;
+  $("aspectNote").textContent = d.aspectNote;
+}
+
+function syncUi() {
+  const view = viewEl.value;
+  const side = view === "side";
+  const crop = Number(cropEl.value);
+  $("aspectWrap").hidden = crop !== 0;
+  $("startWrap").hidden = side;
+  $("cropVal").textContent = `${cropEl.value}%`;
+  $("aspectVal").textContent = Number(aspectEl.value).toFixed(2);
+  $("startVal").textContent = `${$("start").value}°`;
+  const notes = {
+    side: "圓心當望前。裁切係圓頂同圓底各佔幾多像素。",
+    bottom: "圓心當望天。裁切係圓心面積。預設 3%。0% 先可以調寬高比。",
+    top: "圓心當望下。裁切係行星圓心面積。預設 3%。圓外高過 18° 嘅天空固定唔包。",
+  };
+  const crops = {
+    side: "頂同底各裁走幾多個圓入面嘅像素。0% 代表唔裁。",
+    bottom: "裁走圓心幾多面積。3% 大約向上 74°。0% 代表正上方都留低。",
+    top: "裁走行星圓心幾多面積。3% 大約向下 70°。0% 代表正下方都留低。",
+  };
+  $("viewNote").textContent = notes[view];
+  $("cropNote").textContent = crops[view];
+}
+
+$("drop").addEventListener("click", () => fileEl.click());
+$("pick").addEventListener("click", () => fileEl.click());
+$("drop").addEventListener("dragover", (e) => { e.preventDefault(); $("drop").classList.add("over"); });
+$("drop").addEventListener("dragleave", () => $("drop").classList.remove("over"));
+$("drop").addEventListener("drop", (e) => {
+  e.preventDefault();
+  $("drop").classList.remove("over");
+  const f = e.dataTransfer.files[0];
+  if (f) loadFile(f);
+});
+fileEl.addEventListener("change", () => { const f = fileEl.files && fileEl.files[0]; if (f) loadFile(f); });
+function maybePaint() {
+  if ($("auto").checked && srcData) paint();
+}
+
+viewEl.addEventListener("change", () => { applyViewDefaults(); syncUi(); maybePaint(); });
+cropEl.addEventListener("input", syncUi);
+cropEl.addEventListener("change", maybePaint);
+aspectEl.addEventListener("input", syncUi);
+aspectEl.addEventListener("change", () => { if (Number(cropEl.value) === 0) maybePaint(); });
+mirrorEl.addEventListener("change", maybePaint);
+$("start").addEventListener("input", syncUi);
+$("start").addEventListener("change", () => { if (viewEl.value !== "side") maybePaint(); });
+$("go").addEventListener("click", paint);
+$("save").addEventListener("click", () => {
+  $("dst").toBlob((blob) => {
+    if (!blob) return;
+    if (blobUrl) URL.revokeObjectURL(blobUrl);
+    blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = `fisheye-${viewEl.value}.jpg`;
+    a.click();
+  }, "image/jpeg", 0.92);
+});
+syncUi();
+</script>
+<footer class="disclaimer">
+  <p><strong>Disclaimer.</strong> No image is uploaded to any server. All processing stays on your device, in this browser, using plain JavaScript only. No image library or other third-party code is used.</p>
+  <p>免責聲明：圖片唔會上傳到任何伺服器。所有處理都留喺你部裝置嘅瀏覽器入面，只用純 JavaScript，冇用任何外加程式庫。</p>
+</footer>
+</body>
+</html>
