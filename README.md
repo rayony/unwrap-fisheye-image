@@ -90,6 +90,11 @@ The whole circle stays. The tube trick cannot include straight up or straight do
 
 成個圓都留低。圓筒攤法去到正上或正下會要無限長嘅紙，所以改用溫和啲嘅拉法，去到邊就慢落嚟。滑桿揀張相幾高或者幾闊。最外嗰條邊其實只係一點被拉成一條線，所以會糊。
 
-## License
+## License / 授權
 
-MIT
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Commercial use and redistribution are allowed, including changes, if you credit **rayony** and the project **unwrap-fisheye-image**, link to the repository, and say what you changed.
+
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.zh-hant)。可以商用、可以再散佈，改咗都得。請註明名字 **rayony** 同專案 **unwrap-fisheye-image**，連去個 repo，同講明改過咩。
+
+Suggested credit / 建議寫法：`unwrap-fisheye-image by rayony, CC BY 4.0`
+
