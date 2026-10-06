@@ -30,6 +30,7 @@
   figure { margin:0; background:#0c0b09; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
   figcaption { padding:8px 10px; color:var(--muted); font-size:12px; }
   img, canvas { width:100%; height:auto; display:block; background:#111; max-height:78vh; object-fit:contain; }
+  #dst { touch-action:none; cursor:crosshair; }
   .drop { margin-top:4px; border:1px dashed #555; border-radius:8px; padding:18px 12px; text-align:center; color:var(--muted); cursor:pointer; }
   .drop.over { border-color:var(--accent); color:var(--text); }
   #status { margin-top:10px; min-height:1.2em; color:var(--muted); font-size:12px; }
@@ -99,6 +100,16 @@
 
     <label class="check"><input id="auto" type="checkbox" checked /> Convert automatically after upload</label>
     <label class="check"><input id="mirror" type="checkbox" /> Flip left–right</label>
+
+    <label>Cut left <span class="val" id="outLVal">0%</span></label>
+    <input id="outL" type="range" min="0" max="80" value="0" step="1" />
+    <label>Cut top <span class="val" id="outTVal">0%</span></label>
+    <input id="outT" type="range" min="0" max="80" value="0" step="1" />
+    <label>Cut right <span class="val" id="outRVal">0%</span></label>
+    <input id="outR" type="range" min="0" max="80" value="0" step="1" />
+    <label>Cut bottom <span class="val" id="outBVal">0%</span></label>
+    <input id="outB" type="range" min="0" max="80" value="0" step="1" />
+    <p class="note">Keep only part of the result. Drag the gold box, pull a corner or edge, or use the sliders. Save JPEG keeps the box.</p>
 
     <button id="go" type="button" disabled>Convert</button>
     <button id="save" class="ghost" type="button" disabled>Save JPEG</button>
@@ -349,6 +360,105 @@ function buildPlan() {
   return { W, H, ray, summary };
 }
 
+let outPixels = null;
+let box = { l: 0, t: 0, r: 0, b: 0 };
+let drag = null;
+
+function clampBox() {
+  const keep = 0.08;
+  const c = (v) => Math.min(0.92, Math.max(0, v));
+  box.l = c(box.l); box.t = c(box.t); box.r = c(box.r); box.b = c(box.b);
+  if (box.l + box.r > 1 - keep) {
+    const s = (1 - keep) / (box.l + box.r);
+    box.l *= s; box.r *= s;
+  }
+  if (box.t + box.b > 1 - keep) {
+    const s = (1 - keep) / (box.t + box.b);
+    box.t *= s; box.b *= s;
+  }
+}
+
+function writeTrim() {
+  for (const [id, v] of [["outL", box.l], ["outT", box.t], ["outR", box.r], ["outB", box.b]]) {
+    const n = Math.round(v * 100);
+    $(id).value = n;
+    $(id + "Val").textContent = `${n}%`;
+  }
+}
+
+function boxPx() {
+  const W = outPixels.width, H = outPixels.height;
+  return {
+    x: box.l * W, y: box.t * H,
+    w: (1 - box.l - box.r) * W, h: (1 - box.t - box.b) * H, W, H,
+  };
+}
+
+function drawResult() {
+  if (!outPixels) return;
+  const dst = $("dst");
+  const ctx = dst.getContext("2d");
+  ctx.putImageData(outPixels, 0, 0);
+  const { x, y, w, h, W, H } = boxPx();
+  ctx.save();
+  ctx.fillStyle = "rgba(8,7,6,0.5)";
+  ctx.beginPath();
+  ctx.rect(0, 0, W, H);
+  ctx.rect(x, y, w, h);
+  ctx.fill("evenodd");
+  ctx.strokeStyle = "#e0a15a";
+  ctx.lineWidth = Math.max(2, Math.min(W, H) / 400);
+  ctx.strokeRect(x + 1, y + 1, Math.max(1, w - 2), Math.max(1, h - 2));
+  ctx.fillStyle = "#e0a15a";
+  const hs = Math.max(12, Math.min(W, H) * 0.02);
+  for (const [hx, hy] of [[x, y], [x + w / 2, y], [x + w, y], [x + w, y + h / 2], [x + w, y + h], [x + w / 2, y + h], [x, y + h], [x, y + h / 2]]) {
+    ctx.fillRect(hx - hs / 2, hy - hs / 2, hs, hs);
+  }
+  ctx.restore();
+  const kept = document.documentElement.lang.startsWith("zh")
+    ? `結果 ${W}×${H}，留低 ${Math.round(w)}×${Math.round(h)}`
+    : `Result ${W}×${H}, kept ${Math.round(w)}×${Math.round(h)}`;
+  $("outCap").textContent = kept;
+}
+
+function dstPoint(e) {
+  const c = $("dst");
+  const rec = c.getBoundingClientRect();
+  return {
+    x: (e.clientX - rec.left) / rec.width * c.width,
+    y: (e.clientY - rec.top) / rec.height * c.height,
+    hs: Math.max(18, 18 * (c.width / Math.max(1, rec.width))),
+  };
+}
+
+function hitMode(p) {
+  const { x, y, w, h } = boxPx();
+  const hs = p.hs;
+  const near = (ax, ay) => Math.abs(p.x - ax) <= hs && Math.abs(p.y - ay) <= hs;
+  if (near(x, y)) return "nw";
+  if (near(x + w, y)) return "ne";
+  if (near(x, y + h)) return "sw";
+  if (near(x + w, y + h)) return "se";
+  if (Math.abs(p.y - y) <= hs && p.x > x && p.x < x + w) return "n";
+  if (Math.abs(p.y - (y + h)) <= hs && p.x > x && p.x < x + w) return "s";
+  if (Math.abs(p.x - x) <= hs && p.y > y && p.y < y + h) return "w";
+  if (Math.abs(p.x - (x + w)) <= hs && p.y > y && p.y < y + h) return "e";
+  if (p.x >= x && p.x <= x + w && p.y >= y && p.y <= y + h) return "move";
+  return "";
+}
+
+function readTrim() {
+  box = {
+    l: Number($("outL").value) / 100,
+    t: Number($("outT").value) / 100,
+    r: Number($("outR").value) / 100,
+    b: Number($("outB").value) / 100,
+  };
+  clampBox();
+  writeTrim();
+  drawResult();
+}
+
 function paint() {
   if (!srcData) return;
   const token = ++job;
@@ -398,11 +508,11 @@ function paint() {
       drawPct(pct);
       requestAnimationFrame(step);
     } else {
-      ctx.putImageData(img, 0, 0);
-      $("outCap").textContent = `Result ${plan.W}×${plan.H}`;
+      outPixels = img;
       $("status").textContent = plan.summary;
       $("go").disabled = false;
       $("save").disabled = false;
+      drawResult();
     }
   };
   drawPct(0);
@@ -518,6 +628,9 @@ function loadFile(file) {
     $("cx").value = 0;
     $("cy").value = 0;
     $("cr").value = 100;
+    box = { l: 0, t: 0, r: 0, b: 0 };
+    outPixels = null;
+    writeTrim();
     syncUi();
     markCenter();
     $("go").disabled = false;
@@ -596,9 +709,55 @@ $("cr").addEventListener("input", onCenterMove);
 $("cx").addEventListener("change", maybePaint);
 $("cy").addEventListener("change", maybePaint);
 $("cr").addEventListener("change", maybePaint);
+for (const id of ["outL", "outT", "outR", "outB"]) $(id).addEventListener("input", readTrim);
+const cursors = { nw: "nwse-resize", se: "nwse-resize", ne: "nesw-resize", sw: "nesw-resize", n: "ns-resize", s: "ns-resize", e: "ew-resize", w: "ew-resize", move: "move" };
+$("dst").addEventListener("pointerdown", (e) => {
+  if (!outPixels) return;
+  const p = dstPoint(e);
+  const mode = hitMode(p);
+  if (!mode) return;
+  drag = { mode, px: p.x, py: p.y, box: { ...box } };
+  $("dst").setPointerCapture(e.pointerId);
+  e.preventDefault();
+});
+$("dst").addEventListener("pointermove", (e) => {
+  if (!outPixels) return;
+  const p = dstPoint(e);
+  if (!drag) {
+    $("dst").style.cursor = cursors[hitMode(p)] || "crosshair";
+    return;
+  }
+  const dx = (p.x - drag.px) / outPixels.width;
+  const dy = (p.y - drag.py) / outPixels.height;
+  const o = drag.box;
+  if (drag.mode === "move") {
+    const w = 1 - o.l - o.r, h = 1 - o.t - o.b;
+    const l = Math.min(Math.max(0, o.l + dx), 1 - w);
+    const t = Math.min(Math.max(0, o.t + dy), 1 - h);
+    box = { l, t, r: 1 - w - l, b: 1 - h - t };
+  } else {
+    box = {
+      l: o.l + (drag.mode.includes("w") ? dx : 0),
+      r: o.r - (drag.mode.includes("e") ? dx : 0),
+      t: o.t + (drag.mode.includes("n") ? dy : 0),
+      b: o.b - (drag.mode.includes("s") ? dy : 0),
+    };
+    clampBox();
+  }
+  writeTrim();
+  drawResult();
+});
+$("dst").addEventListener("pointerup", () => { drag = null; });
+$("dst").addEventListener("pointercancel", () => { drag = null; });
 $("go").addEventListener("click", paint);
 $("save").addEventListener("click", () => {
-  $("dst").toBlob((blob) => {
+  if (!outPixels) return;
+  const { x, y, w, h } = boxPx();
+  const c = document.createElement("canvas");
+  c.width = Math.max(1, Math.round(w));
+  c.height = Math.max(1, Math.round(h));
+  c.getContext("2d").putImageData(outPixels, -Math.round(x), -Math.round(y));
+  c.toBlob((blob) => {
     if (!blob) return;
     if (blobUrl) URL.revokeObjectURL(blobUrl);
     blobUrl = URL.createObjectURL(blob);

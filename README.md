@@ -24,7 +24,8 @@ Unwrap a circular fisheye, an upward fisheye, or a tiny-planet photo into a norm
    - **Circle radius:** 100% touches the shorter side. Shrink it until the gold ring sits on the edge of the fisheye. A tiny planet with sky around it is usually under 100%. Moving the center does not change the radius.
    - **Start angle** (top and bottom only) chooses where the circle begins. 0° is the right side.
 6. Tick **Flip left–right** if the result is mirrored.
-7. Click **Save JPEG**.
+7. On the result, drag the gold box or pull a handle. **Cut left / top / right / bottom** do the same thing. The dimmed part is left out.
+8. Click **Save JPEG**. Only the box is saved.
 
 **Convert automatically after upload** is on by default. Turn it off to convert only when you click **Convert**.
 
@@ -47,7 +48,8 @@ Unwrap a circular fisheye, an upward fisheye, or a tiny-planet photo into a norm
    - **圓半徑**：100% 貼住較短邊。調到金圈貼住魚眼圓邊。外面仲有天空嘅小行星，多數要細過 100%。移動圓心唔會改變半徑。
    - **起點**（只有頂視同底視）決定圓周由邊度開始拆。0° 係圓嘅右面。
 6. 需要時剔「左右反轉」。
-7. 撳「儲存 JPEG」。
+7. 喺結果圖拖金框，或者拉角同邊。**結果左裁／上裁／右裁／下裁**係同一件事。變暗嘅部分唔會留。
+8. 撳「儲存 JPEG」。只存框入面。
 
 「上傳後自動展開」預設開住。取消之後，要自己撳「展開」先轉換。
 
