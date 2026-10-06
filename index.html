@@ -364,6 +364,20 @@ function paint() {
   const od = img.data;
   let y = 0;
   const rows = plan.H > 1600 ? 4 : 12;
+  const drawPct = (pct) => {
+    ctx.putImageData(img, 0, 0);
+    ctx.save();
+    ctx.fillStyle = "rgba(18,17,14,0.72)";
+    const bw = Math.min(plan.W * 0.7, 480);
+    const bh = Math.min(Math.max(72, plan.H * 0.22), 150);
+    ctx.fillRect((plan.W - bw) / 2, (plan.H - bh) / 2, bw, bh);
+    ctx.fillStyle = "#f4efe6";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = `600 ${Math.round(Math.max(22, Math.min(plan.W, plan.H) * 0.07))}px sans-serif`;
+    ctx.fillText(`展開中 ${pct}%`, plan.W / 2, plan.H / 2);
+    ctx.restore();
+  };
   const step = () => {
     if (token !== job) return;
     const y1 = Math.min(plan.H, y + rows);
@@ -379,7 +393,9 @@ function paint() {
       }
     }
     if (y < plan.H) {
-      $("status").textContent = `展開中 ${Math.round(100 * y / plan.H)}%`;
+      const pct = Math.round(100 * y / plan.H);
+      $("status").textContent = `展開中 ${pct}%`;
+      drawPct(pct);
       requestAnimationFrame(step);
     } else {
       ctx.putImageData(img, 0, 0);
@@ -389,6 +405,7 @@ function paint() {
       $("save").disabled = false;
     }
   };
+  drawPct(0);
   requestAnimationFrame(step);
 }
 

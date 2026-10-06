@@ -19,8 +19,12 @@ Unwrap a circular fisheye, an upward fisheye, or a tiny-planet photo into a norm
    - **Side (looking forward):** the centre is ahead. Crop the top and bottom of the circle. At 0% the whole circle is kept, then set height ÷ width.
    - **Bottom (looking up):** the centre is straight up. Crop the centre and set where the circle starts.
    - **Top (tiny planet / looking down):** the centre is straight down. Crop the planet centre and set the start angle.
-5. Tick **Flip left–right** if the result is mirrored.
-6. Click **Save JPEG**.
+5. Line the gold ring up with the round photo. The circle is not detected automatically.
+   - **Center left–right** and **Center up–down:** 0% is the middle of the photo. Right and down are positive.
+   - **Circle radius:** 100% touches the shorter side. Shrink it until the gold ring sits on the edge of the fisheye. A tiny planet with sky around it is usually under 100%. Moving the center does not change the radius.
+   - **Start angle** (top and bottom only) chooses where the circle begins. 0° is the right side.
+6. Tick **Flip left–right** if the result is mirrored.
+7. Click **Save JPEG**.
 
 **Convert automatically after upload** is on by default. Turn it off to convert only when you click **Convert**.
 
@@ -38,8 +42,12 @@ Unwrap a circular fisheye, an upward fisheye, or a tiny-planet photo into a norm
    - **側面（望前）**：圓心係前方。可調上下裁切；0% 會保留成個圓，再揀高÷寬。
    - **底視（望天）**：圓心係正上方。可調圓心裁切同圓周起點。
    - **頂視（小行星／望下）**：圓心係正下方。可調行星圓心裁切同圓周起點。
-5. 需要時剔「左右反轉」。
-6. 撳「儲存 JPEG」。
+5. 把金色圓對準魚眼圓。程式唔會自動估個圓。
+   - **圓心左右**、**圓心上下**：0% 係張相正中。右同下係正數。
+   - **圓半徑**：100% 貼住較短邊。調到金圈貼住魚眼圓邊。外面仲有天空嘅小行星，多數要細過 100%。移動圓心唔會改變半徑。
+   - **起點**（只有頂視同底視）決定圓周由邊度開始拆。0° 係圓嘅右面。
+6. 需要時剔「左右反轉」。
+7. 撳「儲存 JPEG」。
 
 「上傳後自動展開」預設開住。取消之後，要自己撳「展開」先轉換。
 
@@ -64,6 +72,12 @@ No image is uploaded to any server. Processing stays on your device, in the brow
 Imagine the round photo as a round window that squashed the view into a circle. The page spreads it back into a rectangle.
 
 圓相好似一扇圓窗，把景色壓入一個圓。呢頁把個圓攤返做長方形。
+
+### The gold ring / 金色圓
+
+The page does not find the circle for you. The cross is the centre, and the ring is the radius. Match the ring to the edge of the round photo first. Every view, and both crop settings, use that same circle.
+
+頁面唔會自動搵個圓。十字係圓心，金圈係半徑。展開之前，先把金圈對準圓相邊。三個視角、兩種裁切都用同一個圓。
 
 ![三種視角 × 兩種裁切。紅色係預設剪走，金框係輸出形狀。 Red is the default crop. The gold box is the output shape.](sample-fisheye.png)
 
