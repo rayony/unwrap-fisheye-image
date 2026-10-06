@@ -400,6 +400,10 @@ function drawResult() {
   const ctx = dst.getContext("2d");
   ctx.putImageData(outPixels, 0, 0);
   const { x, y, w, h, W, H } = boxPx();
+  const rec = dst.getBoundingClientRect();
+  const scale = W / Math.max(1, rec.width);
+  const line = Math.max(2, 3 * scale);
+  const hs = Math.max(10, 16 * scale);
   ctx.save();
   ctx.fillStyle = "rgba(8,7,6,0.5)";
   ctx.beginPath();
@@ -407,11 +411,12 @@ function drawResult() {
   ctx.rect(x, y, w, h);
   ctx.fill("evenodd");
   ctx.strokeStyle = "#e0a15a";
-  ctx.lineWidth = Math.max(2, Math.min(W, H) / 400);
-  ctx.strokeRect(x + 1, y + 1, Math.max(1, w - 2), Math.max(1, h - 2));
+  ctx.lineWidth = line;
+  const pad = line;
+  ctx.strokeRect(x + pad, y + pad, Math.max(1, w - pad * 2), Math.max(1, h - pad * 2));
   ctx.fillStyle = "#e0a15a";
-  const hs = Math.max(12, Math.min(W, H) * 0.02);
-  for (const [hx, hy] of [[x, y], [x + w / 2, y], [x + w, y], [x + w, y + h / 2], [x + w, y + h], [x + w / 2, y + h], [x, y + h], [x, y + h / 2]]) {
+  const ix = x + hs, iy = y + hs, ax = x + w - hs, ay = y + h - hs;
+  for (const [hx, hy] of [[ix, iy], [(x + x + w) / 2, iy], [ax, iy], [ax, (y + y + h) / 2], [ax, ay], [(x + x + w) / 2, ay], [ix, ay], [ix, (y + y + h) / 2]]) {
     ctx.fillRect(hx - hs / 2, hy - hs / 2, hs, hs);
   }
   ctx.restore();
@@ -433,16 +438,19 @@ function dstPoint(e) {
 
 function hitMode(p) {
   const { x, y, w, h } = boxPx();
-  const hs = p.hs;
-  const near = (ax, ay) => Math.abs(p.x - ax) <= hs && Math.abs(p.y - ay) <= hs;
-  if (near(x, y)) return "nw";
-  if (near(x + w, y)) return "ne";
-  if (near(x, y + h)) return "sw";
-  if (near(x + w, y + h)) return "se";
-  if (Math.abs(p.y - y) <= hs && p.x > x && p.x < x + w) return "n";
-  if (Math.abs(p.y - (y + h)) <= hs && p.x > x && p.x < x + w) return "s";
-  if (Math.abs(p.x - x) <= hs && p.y > y && p.y < y + h) return "w";
-  if (Math.abs(p.x - (x + w)) <= hs && p.y > y && p.y < y + h) return "e";
+  const dst = $("dst");
+  const rec = dst.getBoundingClientRect();
+  const hs = Math.max(10, 16 * (dst.width / Math.max(1, rec.width)));
+  const ix = x + hs, iy = y + hs, ax = x + w - hs, ay = y + h - hs;
+  const near = (ax0, ay0) => Math.abs(p.x - ax0) <= hs && Math.abs(p.y - ay0) <= hs;
+  if (near(ix, iy)) return "nw";
+  if (near(x + w / 2, iy)) return "n";
+  if (near(ax, iy)) return "ne";
+  if (near(ax, y + h / 2)) return "e";
+  if (near(ax, ay)) return "se";
+  if (near(x + w / 2, ay)) return "s";
+  if (near(ix, ay)) return "sw";
+  if (near(ix, y + h / 2)) return "w";
   if (p.x >= x && p.x <= x + w && p.y >= y && p.y <= y + h) return "move";
   return "";
 }
