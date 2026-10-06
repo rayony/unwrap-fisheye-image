@@ -114,7 +114,7 @@
   </aside>
   <section class="stage" id="stage" hidden>
     <figure>
-      <figcaption>原圖</figcaption>
+      <figcaption>原圖（紅色會剪走）</figcaption>
       <canvas id="src"></canvas>
     </figure>
     <figure>
@@ -409,10 +409,63 @@ function paint() {
   requestAnimationFrame(step);
 }
 
+function shadeRemoved(cx, cy, r) {
+  const crop = Number($("crop").value);
+  const view = viewEl.value;
+  srcCtx.save();
+  srcCtx.fillStyle = "rgba(210, 72, 58, 0.45)";
+  if (view === "side" && crop > 0) {
+    const phiMax = phiMaxForCrop(crop);
+    fillCap(cx, cy, r, phiMax, 1);
+    fillCap(cx, cy, r, phiMax, -1);
+  } else if (view === "bottom" && crop > 0) {
+    srcCtx.beginPath();
+    srcCtx.arc(cx, cy, Math.max(1, r * Math.sqrt(crop / 100)), 0, Math.PI * 2);
+    srcCtx.fill();
+  } else if (view === "top") {
+    if (crop > 0) {
+      srcCtx.beginPath();
+      srcCtx.arc(cx, cy, Math.max(1, r * Math.sqrt(crop / 100)), 0, Math.PI * 2);
+      srcCtx.fill();
+    }
+    const elevOut = (crop > 0 ? 18 : 20) * Math.PI / 180;
+    const outer = r * Math.tan((elevOut + Math.PI / 2) / 2);
+    srcCtx.beginPath();
+    srcCtx.rect(0, 0, srcW, srcH);
+    srcCtx.arc(cx, cy, outer, 0, Math.PI * 2, true);
+    srcCtx.fill("evenodd");
+  }
+  srcCtx.restore();
+}
+
+function fillCap(cx, cy, r, phiMax, sign) {
+  const t0 = phiMax / (Math.PI / 2);
+  const left = [], right = [];
+  for (let i = 0; i <= 48; i++) {
+    const rn = t0 + (1 - t0) * (i / 48);
+    const theta = rn * Math.PI / 2;
+    const iy = Math.sin(phiMax) * rn / Math.sin(theta);
+    const ix = Math.sqrt(Math.max(0, rn * rn - iy * iy));
+    const y = cy - sign * iy * r;
+    left.push([cx - ix * r, y]);
+    right.push([cx + ix * r, y]);
+  }
+  const a0 = Math.atan2(left[left.length - 1][1] - cy, left[left.length - 1][0] - cx);
+  const a1 = Math.atan2(right[right.length - 1][1] - cy, right[right.length - 1][0] - cx);
+  srcCtx.beginPath();
+  srcCtx.moveTo(left[0][0], left[0][1]);
+  for (const p of left) srcCtx.lineTo(p[0], p[1]);
+  srcCtx.arc(cx, cy, r, a0, a1, sign > 0);
+  for (let i = right.length - 1; i >= 0; i--) srcCtx.lineTo(right[i][0], right[i][1]);
+  srcCtx.closePath();
+  srcCtx.fill();
+}
+
 function markCenter() {
   if (!srcData || !srcCtx) return;
   srcCtx.putImageData(new ImageData(new Uint8ClampedArray(srcData), srcW, srcH), 0, 0);
   const { cx, cy, r } = photoDisk();
+  shadeRemoved(cx, cy, r);
   srcCtx.save();
   srcCtx.strokeStyle = "#e0a15a";
   srcCtx.lineWidth = Math.max(2, srcW / 500);
@@ -508,7 +561,7 @@ function maybePaint() {
 }
 
 viewEl.addEventListener("change", () => { applyViewDefaults(); syncUi(); markCenter(); maybePaint(); });
-cropEl.addEventListener("input", syncUi);
+cropEl.addEventListener("input", () => { syncUi(); markCenter(); });
 cropEl.addEventListener("change", maybePaint);
 aspectEl.addEventListener("input", syncUi);
 aspectEl.addEventListener("change", () => { if (Number(cropEl.value) === 0) maybePaint(); });
