@@ -10,7 +10,10 @@ Unwrap a circular fisheye, an upward fisheye, or a tiny-planet photo into a norm
 ## How to use
 
 1. Open either page above.
-2. Optional: download [try-fisheye.jpg](try-fisheye.jpg), then drop that file onto the page (or use Choose image). It is a circular side-view fisheye.
+2. Optional: download a sample, then drop it on the page and pick the matching view.
+   - [try-fisheye.jpg](try-fisheye.jpg) — side (looking forward)
+   - [try-fisheye-bottom.jpg](try-fisheye-bottom.jpg) — bottom (looking up)
+   - [try-fisheye-top.jpg](try-fisheye-top.jpg) — top (tiny planet)
 3. Or drop your own JPEG or PNG.
 4. Pick a view:
    - **Side (looking forward):** the centre is ahead. Crop the top and bottom of the circle. At 0% the whole circle is kept, then set height ÷ width.
@@ -26,7 +29,10 @@ Unwrap a circular fisheye, an upward fisheye, or a tiny-planet photo into a norm
 ## 點用
 
 1. 打開上面任一頁。
-2. 可以先下載 [try-fisheye.jpg](try-fisheye.jpg)，再拖返頁面（或者撳「選擇圖片」）。呢張係側面圓形魚眼。
+2. 可以先下載樣本，再拖返頁面，並揀對應視角。
+   - [try-fisheye.jpg](try-fisheye.jpg)：側面（望前）
+   - [try-fisheye-bottom.jpg](try-fisheye-bottom.jpg)：底視（望天）
+   - [try-fisheye-top.jpg](try-fisheye-top.jpg)：頂視（小行星）
 3. 或者直接拖入你自己嘅 JPEG／PNG。
 4. 揀視角：
    - **側面（望前）**：圓心係前方。可調上下裁切；0% 會保留成個圓，再揀高÷寬。
@@ -50,8 +56,8 @@ No image is uploaded to any server. Processing stays on your device, in the brow
 - `index.html` — Chinese page. One file, works offline.
 - `en.html` — English page. Same tool.
 - `sample-fisheye.png` — diagram of the three views and the two crop settings.
-- `try-fisheye.jpg` — a circular fisheye you can download and upload into the page.
-- 試用相係 `try-fisheye.jpg`，下載後再上傳到頁面。
+- `try-fisheye.jpg` — side-view sample. `try-fisheye-bottom.jpg` — looking up. `try-fisheye-top.jpg` — tiny planet.
+- 三張試用相：側面 `try-fisheye.jpg`、底視 `try-fisheye-bottom.jpg`、頂視 `try-fisheye-top.jpg`。
 
 ## How it works / 點樣拆
 
