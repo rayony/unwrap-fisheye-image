@@ -43,13 +43,20 @@ No image is uploaded to any server. Processing stays on your device, in the brow
 
 - `index.html` — Chinese page. One file, works offline.
 - `en.html` — English page. Same tool.
-- 中文頁係 `index.html`，英文頁係 `en.html`。兩頁都係單檔，可離線打開。
+- `sample-fisheye.png` — diagram of the three views and the two crop settings.
+- 示範圖係 `sample-fisheye.png`。
 
 ## How it works / 點樣拆
 
 Imagine the round photo as a round window that squashed the view into a circle. The page spreads it back into a rectangle.
 
 圓相好似一扇圓窗，把景色壓入一個圓。呢頁把個圓攤返做長方形。
+
+![三種視角 × 兩種裁切。紅色係預設剪走，金框係輸出形狀。 Red is the default crop. The gold box is the output shape.](sample-fisheye.png)
+
+In each row the gold boxes share one width, so height shows the ratio. Side default crop 1% makes a picture about 3.5 times as tall as it is wide. At 0% the default height ÷ width is 1.58. Bottom default crop 3% makes a picture about 1.8 times as wide as it is tall. At 0% the default width ÷ height is 2.5. Top default crop 3% makes a picture about twice as wide as it is tall. At 0% the default width ÷ height is 2.2.
+
+每一行金框用同一個闊度，高矮就係比例。側面預設裁 1%，高大約係闊嘅 3.5 倍；0% 預設高÷寬 1.58。底視預設裁圓心 3%，寬大約係高嘅 1.8 倍；0% 預設寬÷高 2.5。頂視預設裁圓心 3%，寬大約係高嘅 2 倍；0% 預設寬÷高 2.2。
 
 ### Side / 側面（望前）
 

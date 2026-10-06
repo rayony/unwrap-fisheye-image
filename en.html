@@ -38,6 +38,7 @@
   .explain h2 { margin:18px 0 6px; color:var(--text); font-size:16px; }
   .explain h3 { margin:14px 0 4px; color:var(--text); font-size:14px; }
   .explain p { margin:6px 0; }
+  .explain img { max-height:none; width:100%; margin:8px 0; border:1px solid var(--line); border-radius:8px; background:#111; }
   @media (max-width:860px) {
     main { grid-template-columns:1fr; }
     aside { border-right:0; border-bottom:1px solid var(--line); }
@@ -544,6 +545,8 @@ syncUi();
 <section class="explain">
   <h2>How the picture is unwrapped</h2>
   <p>The round photo is like a round window that has squashed the view into a circle. This page spreads that circle back into a rectangle.</p>
+  <img src="sample-fisheye.png" alt="Three views and two crop settings. Red is the default crop. The gold box is the output shape.">
+  <p>In each row the output boxes use the same width, so the height is the ratio. Side view’s default crop is 1%, and the result is about 3.5 times as tall as it is wide. At 0% the default height ÷ width is 1.58. Bottom view’s default cuts 3% from the centre, and the result is about 1.8 times as wide as it is tall. At 0% the default width ÷ height is 2.5. Top view also cuts 3% from the centre by default, and the result is about twice as wide as it is tall. At 0% the default width ÷ height is 2.2.</p>
   <h3>Side view</h3>
   <p>The middle of the circle is looking straight ahead. Left and right mean turning your head. Up and down mean looking up or down. The very top of the circle is almost straight up. The very bottom is almost straight down.</p>
   <h3>Bottom view</h3>
