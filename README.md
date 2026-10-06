@@ -20,7 +20,7 @@ Unwrap a circular fisheye, an upward fisheye, or a tiny-planet photo into a norm
    - **Bottom (looking up):** the centre is straight up. Crop the centre and set where the circle starts.
    - **Top (tiny planet / looking down):** the centre is straight down. Crop the planet centre and set the start angle.
 5. Line the gold ring up with the round photo. The circle is not detected automatically.
-   - **Center left–right** and **Center up–down:** 0% is the middle of the photo. Right and down are positive.
+   - **Center left–right** and **Center up–down:** 0% is the middle of the photo. Right and down are positive. You can also drag the cross on the original picture.
    - **Circle radius:** 100% touches the shorter side. Shrink it until the gold ring sits on the edge of the fisheye. A tiny planet with sky around it is usually under 100%. Moving the center does not change the radius.
    - **Start angle** (top and bottom only) chooses where the circle begins. 0° is the right side.
 6. Tick **Flip left–right** if the result is mirrored.
@@ -44,7 +44,7 @@ Unwrap a circular fisheye, an upward fisheye, or a tiny-planet photo into a norm
    - **底視（望天）**：圓心係正上方。可調圓心裁切同圓周起點。
    - **頂視（小行星／望下）**：圓心係正下方。可調行星圓心裁切同圓周起點。
 5. 把金色圓對準魚眼圓。程式唔會自動估個圓。
-   - **圓心左右**、**圓心上下**：0% 係張相正中。右同下係正數。
+   - **圓心左右**、**圓心上下**：0% 係張相正中。右同下係正數。亦可以喺原圖拖十字搬圓心。
    - **圓半徑**：100% 貼住較短邊。調到金圈貼住魚眼圓邊。外面仲有天空嘅小行星，多數要細過 100%。移動圓心唔會改變半徑。
    - **起點**（只有頂視同底視）決定圓周由邊度開始拆。0° 係圓嘅右面。
 6. 需要時剔「左右反轉」。

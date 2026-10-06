@@ -30,7 +30,7 @@
   figure { margin:0; background:#0c0b09; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
   figcaption { padding:8px 10px; color:var(--muted); font-size:12px; }
   img, canvas { width:100%; height:auto; display:block; background:#111; max-height:78vh; object-fit:contain; }
-  #dst { touch-action:none; cursor:crosshair; }
+  #dst, #src { touch-action:none; cursor:crosshair; }
   .drop { margin-top:4px; border:1px dashed #555; border-radius:8px; padding:18px 12px; text-align:center; color:var(--muted); cursor:pointer; }
   .drop.over { border-color:var(--accent); color:var(--text); }
   #status { margin-top:10px; min-height:1.2em; color:var(--muted); font-size:12px; }
@@ -96,10 +96,12 @@
     <input id="cy" type="range" min="-50" max="50" value="0" step="1" />
     <label>圓半徑 <span class="val" id="crVal">100%</span></label>
     <input id="cr" type="range" min="20" max="140" value="100" step="1" />
-    <p class="note">圓心 0% 係張相正中，以成張相計。半徑 100% 貼住較短邊；金色圓要貼住魚眼圓邊，行星相多數要調細。圓心移開唔會再改半徑。</p>
+    <p class="note">圓心 0% 係張相正中。可以拖原圖上嘅十字搬圓心。半徑 100% 貼住較短邊；金色圓要貼住魚眼圓邊。移動圓心唔會改半徑。</p>
 
     <label class="check"><input id="auto" type="checkbox" checked /> 上傳後自動展開</label>
     <label class="check"><input id="mirror" type="checkbox" /> 左右反轉</label>
+
+    <button id="go" type="button" disabled>展開</button>
 
     <label>結果左裁 <span class="val" id="outLVal">0%</span></label>
     <input id="outL" type="range" min="0" max="80" value="0" step="1" />
@@ -111,7 +113,6 @@
     <input id="outB" type="range" min="0" max="80" value="0" step="1" />
     <p class="note">只留結果嘅一部分。拖金框移動，拉角或邊改大小，或者用上面四條。儲存 JPEG 只存框入面。</p>
 
-    <button id="go" type="button" disabled>展開</button>
     <button id="save" class="ghost" type="button" disabled>儲存 JPEG</button>
     <p id="status">未有圖片。</p>
     <p class="more">
@@ -719,6 +720,40 @@ $("cy").addEventListener("change", maybePaint);
 $("cr").addEventListener("change", maybePaint);
 for (const id of ["outL", "outT", "outR", "outB"]) $(id).addEventListener("input", readTrim);
 const cursors = { nw: "nwse-resize", se: "nwse-resize", ne: "nesw-resize", sw: "nesw-resize", n: "ns-resize", s: "ns-resize", e: "ew-resize", w: "ew-resize", move: "move" };
+let dragCenter = false;
+function srcPoint(e) {
+  const c = $("src");
+  const rec = c.getBoundingClientRect();
+  return {
+    x: Math.min(srcW - 1, Math.max(0, (e.clientX - rec.left) / rec.width * c.width)),
+    y: Math.min(srcH - 1, Math.max(0, (e.clientY - rec.top) / rec.height * c.height)),
+  };
+}
+function setCenterFromPoint(px, py) {
+  $("cx").value = Math.max(-50, Math.min(50, Math.round((px / srcW - 0.5) * 100)));
+  $("cy").value = Math.max(-50, Math.min(50, Math.round((py / srcH - 0.5) * 100)));
+  syncUi();
+  markCenter();
+}
+$("src").addEventListener("pointerdown", (e) => {
+  if (!srcData) return;
+  dragCenter = true;
+  $("src").setPointerCapture(e.pointerId);
+  const p = srcPoint(e);
+  setCenterFromPoint(p.x, p.y);
+  e.preventDefault();
+});
+$("src").addEventListener("pointermove", (e) => {
+  if (!dragCenter) return;
+  const p = srcPoint(e);
+  setCenterFromPoint(p.x, p.y);
+});
+$("src").addEventListener("pointerup", () => {
+  if (!dragCenter) return;
+  dragCenter = false;
+  maybePaint();
+});
+$("src").addEventListener("pointercancel", () => { dragCenter = false; });
 $("dst").addEventListener("pointerdown", (e) => {
   if (!outPixels) return;
   const p = dstPoint(e);
