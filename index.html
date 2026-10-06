@@ -13,7 +13,7 @@
   header p { margin:4px 0 0; color:var(--muted); font-size:12px; max-width:62rem; }
   a.lang { float:right; margin:2px 0 0 16px; color:var(--accent); font-size:13px; text-decoration:none; }
   a.lang:hover { text-decoration:underline; }
-  main { display:grid; grid-template-columns:300px 1fr; min-height:calc(100vh - 72px); }
+  main { display:grid; grid-template-columns:300px 1fr; }
   aside { padding:14px; border-right:1px solid var(--line); background:var(--panel); }
   label { display:block; margin:12px 0 4px; color:var(--muted); font-size:12px; }
   input[type="range"] { width:100%; accent-color:var(--accent); }
@@ -26,12 +26,15 @@
   .check { display:flex; gap:8px; align-items:center; margin-top:14px; color:var(--text); font-size:13px; }
   .check input { accent-color:var(--accent); width:16px; height:16px; }
   .stage { padding:14px; display:grid; grid-template-columns:1fr 1fr; gap:12px; align-content:start; }
+  .stage[hidden] { display:none; }
   figure { margin:0; background:#0c0b09; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
   figcaption { padding:8px 10px; color:var(--muted); font-size:12px; }
   img, canvas { width:100%; height:auto; display:block; background:#111; max-height:78vh; object-fit:contain; }
   .drop { margin-top:4px; border:1px dashed #555; border-radius:8px; padding:18px 12px; text-align:center; color:var(--muted); cursor:pointer; }
   .drop.over { border-color:var(--accent); color:var(--text); }
-  #status { margin-top:10px; min-height:2.4em; color:var(--muted); font-size:12px; }
+  #status { margin-top:10px; min-height:1.2em; color:var(--muted); font-size:12px; }
+  .more { margin-top:16px; display:flex; flex-direction:column; gap:8px; }
+  .more a { color:var(--accent); }
   footer.disclaimer { padding:14px 18px 22px; border-top:1px solid var(--line); color:var(--muted); font-size:12px; line-height:1.5; }
   footer.disclaimer strong { color:var(--text); font-weight:600; }
   .explain { padding:8px 18px 18px; color:var(--muted); font-size:14px; line-height:1.55; max-width:52rem; }
@@ -91,8 +94,12 @@
     <button id="go" type="button" disabled>展開</button>
     <button id="save" class="ghost" type="button" disabled>儲存 JPEG</button>
     <p id="status">未有圖片。</p>
+    <p class="more">
+      <a href="https://github.com/rayony/unwrap-fisheye-image#readme">點樣拆（GitHub 說明）</a>
+      <a href="sample-fisheye.png">示範圖</a>
+    </p>
   </aside>
-  <section class="stage">
+  <section class="stage" id="stage" hidden>
     <figure>
       <figcaption>原圖</figcaption>
       <canvas id="src"></canvas>
@@ -457,6 +464,7 @@ function loadFile(file) {
     srcW = Math.max(2, Math.round(img.naturalWidth * sc));
     srcH = Math.max(2, Math.round(img.naturalHeight * sc));
     srcCanvas = $("src");
+    $("stage").hidden = false;
     srcCanvas.width = srcW;
     srcCanvas.height = srcH;
     srcCtx = srcCanvas.getContext("2d", { willReadFrequently: true });
@@ -542,24 +550,6 @@ $("save").addEventListener("click", () => {
 });
 syncUi();
 </script>
-<section class="explain">
-  <h2>點樣拆開張相</h2>
-  <p>圓相好似一扇圓窗，把周圍景色壓入一個圓。呢頁係把個圓攤返做一張長方形相。</p>
-  <img src="sample-fisheye.png" alt="三種視角、兩種裁切。紅色係預設剪走，金框係輸出比例。">
-  <p>上圖每一行用同一個闊度畫輸出框，所以高矮就係比例。側面預設裁 1%，出來高大約係闊嘅 3.5 倍；0% 預設高÷寬 1.58。底視預設裁圓心 3%，寬大約係高嘅 1.8 倍；0% 預設寬÷高 2.5。頂視預設同樣裁圓心 3%，寬大約係高嘅 2 倍；0% 預設寬÷高 2.2。</p>
-  <h3>側面（望前）</h3>
-  <p>圓心係望直前方。左右係轉頭，上下係望高望低。圓嘅最頂幾乎係正上方，最底幾乎係正下方。</p>
-  <h3>底視（望天）</h3>
-  <p>圓心係頭頂嘅天。圓邊係地平線，樓同天交接嗰度。沿住個圓行一圈，就係自己轉一個圈，所以結果係一張好長嘅全景。</p>
-  <h3>頂視（小行星／望下）</h3>
-  <p>圓心係腳下嘅地。城市嗰個圓邊係地平線。圓外面嘅藍色已經係天空。沿住個圓行一圈，同樣係自己轉一個圈。</p>
-  <h3>裁切大過 0%</h3>
-  <p>我哋剪走拉得最勁嗰截，再好似貼上圓筒咁攤平。愈望高或者愈望低，嗰截就要畫得愈高，所以樓睇落比較自然。但唔可以去到正上或者正下，否則張紙會無限長。</p>
-  <p>側面剪走圓頂同圓底。底視剪走圓心一點天空。頂視剪走行星圓心一點地面；圓外高過 18° 嘅天空都唔要。</p>
-  <h3>裁切係 0%</h3>
-  <p>成個圓都留低，連正上或者正下都要。圓筒嗰種攤法做唔到，因為嗰一個方向會要無限長嘅紙。所以改用溫和啲嘅拉法：中間仍然有少少似圓筒，去到邊就慢落嚟，成個圓先塞得入去。你用滑桿揀張相幾高或者幾闊。</p>
-  <p>結果最頂或者最底嗰條邊，其實只係相入面一點被拉成一條線，所以會糊。呢個就係唔剪任何嘢嘅代價。</p>
-</section>
 <footer class="disclaimer">
   <p><strong>Disclaimer.</strong> No image is uploaded to any server. All processing stays on your device, in this browser, using plain JavaScript only. No image library or other third-party code is used.</p>
   <p>免責聲明：圖片唔會上傳到任何伺服器。所有處理都留喺你部裝置嘅瀏覽器入面，只用純 JavaScript，冇用任何外加程式庫。</p>
