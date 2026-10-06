@@ -89,6 +89,12 @@
       <p class="note">圓周由邊一度開始拆。0° 係圓嘅右面，轉一圈會返到同一張相。</p>
     </div>
 
+    <label>圓心左右 <span class="val" id="cxVal">0%</span></label>
+    <input id="cx" type="range" min="-40" max="40" value="0" step="1" />
+    <label>圓心上下 <span class="val" id="cyVal">0%</span></label>
+    <input id="cy" type="range" min="-40" max="40" value="0" step="1" />
+    <p class="note">0% 係自動搵到嘅圓心，以個圓半徑計。右同下係正數。三個視角、有冇裁切都用同一組。</p>
+
     <label class="check"><input id="auto" type="checkbox" checked /> 上傳後自動展開</label>
     <label class="check"><input id="mirror" type="checkbox" /> 左右反轉</label>
 
@@ -233,51 +239,58 @@ function detectBottom() {
 }
 
 function detectTop() {
-  const N = 120;
-  const lum = new Float32Array(N * N);
+  const N = 90;
+  const pix = new Float32Array(N * N * 3);
   for (let y = 0; y < N; y++) {
     const iy = Math.min(srcH - 1, ((y + 0.5) * srcH / N) | 0);
     for (let x = 0; x < N; x++) {
       const ix = Math.min(srcW - 1, ((x + 0.5) * srcW / N) | 0);
       const i = (iy * srcW + ix) * 4;
-      lum[y * N + x] = (srcData[i] + srcData[i + 1] + srcData[i + 2]) / 3;
+      const o = (y * N + x) * 3;
+      pix[o] = srcData[i]; pix[o + 1] = srcData[i + 1]; pix[o + 2] = srcData[i + 2];
     }
   }
-  const vari = new Float32Array(N * N);
-  for (let y = 1; y < N - 1; y++) {
-    for (let x = 1; x < N - 1; x++) {
-      let s = 0, s2 = 0;
-      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
-        const v = lum[(y + dy) * N + x + dx];
-        s += v; s2 += v * v;
+  function bestRing(cx, cy) {
+    const sum = new Float64Array(N * 3);
+    const cnt = new Int32Array(N);
+    for (let y = 0; y < N; y++) {
+      for (let x = 0; x < N; x++) {
+        const r = Math.hypot(x - cx, y - cy) | 0;
+        if (r >= N) continue;
+        const o = (y * N + x) * 3;
+        sum[r * 3] += pix[o]; sum[r * 3 + 1] += pix[o + 1]; sum[r * 3 + 2] += pix[o + 2];
+        cnt[r]++;
       }
-      const m = s / 9;
-      vari[y * N + x] = s2 / 9 - m * m;
+    }
+    let best = 0, br = N * 0.32;
+    for (let r = 8; r < N * 0.48; r++) {
+      let ai = 0, ao = 0, ni = 0, no = 0;
+      const inn = [0, 0, 0], out = [0, 0, 0];
+      for (let k = r - 2; k < r; k++) if (k >= 0 && cnt[k]) { ni += cnt[k]; for (let c = 0; c < 3; c++) inn[c] += sum[k * 3 + c]; }
+      for (let k = r; k < r + 2 && k < N; k++) if (cnt[k]) { no += cnt[k]; for (let c = 0; c < 3; c++) out[c] += sum[k * 3 + c]; }
+      if (ni < 8 || no < 8) continue;
+      let diff = 0;
+      for (let c = 0; c < 3; c++) diff += Math.abs(inn[c] / ni - out[c] / no);
+      if (diff > best) { best = diff; br = r; }
+    }
+    return { best, br };
+  }
+  let score = -1, bcx = N / 2, bcy = N / 2, br = N * 0.32;
+  for (let cy = (N * 0.2) | 0; cy < N * 0.8; cy += 3) {
+    for (let cx = (N * 0.2) | 0; cx < N * 0.8; cx += 3) {
+      const hit = bestRing(cx, cy);
+      if (hit.best > score) { score = hit.best; bcx = cx; bcy = cy; br = hit.br; }
     }
   }
-  function ring(cx, cy, r0, r1) {
-    let s = 0, n = 0;
-    const a = r0 * r0, b = r1 * r1;
-    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
-      const d2 = (x - cx) ** 2 + (y - cy) ** 2;
-      if (d2 >= a && d2 < b) { s += vari[y * N + x]; n++; }
-    }
-    return n ? s / n : 0;
-  }
-  let best = -1e9, bcx = N / 2, bcy = N * 0.46;
-  for (let cy = (N * 0.3) | 0; cy < N * 0.65; cy += 3) {
-    for (let cx = (N * 0.3) | 0; cx < N * 0.7; cx += 3) {
-      const score = ring(cx, cy, N * 0.16, N * 0.28) - ring(cx, cy, N * 0.36, N * 0.46);
-      if (score > best) { best = score; bcx = cx; bcy = cy; }
+  const x0 = Math.max(2, bcx - 4), x1 = Math.min(N - 3, bcx + 4);
+  const y0 = Math.max(2, bcy - 4), y1 = Math.min(N - 3, bcy + 4);
+  for (let cy = y0; cy <= y1; cy++) {
+    for (let cx = x0; cx <= x1; cx++) {
+      const hit = bestRing(cx, cy);
+      if (hit.best > score) { score = hit.best; bcx = cx; bcy = cy; br = hit.br; }
     }
   }
-  let prev = ring(bcx, bcy, 8, 14), dropR = N * 0.32, bestDrop = 0;
-  for (let r = 16; r < N * 0.48; r += 2) {
-    const now = ring(bcx, bcy, r, r + 6);
-    if (prev - now > bestDrop) { bestDrop = prev - now; dropR = r + 3; }
-    prev = now;
-  }
-  return { cx: bcx * srcW / N, cy: bcy * srcH / N, r: dropR * (srcW + srcH) / (2 * N) };
+  return { cx: bcx * srcW / N, cy: bcy * srcH / N, r: br * (srcW + srcH) / (2 * N) };
 }
 
 function sample(x, y) {
@@ -304,8 +317,11 @@ function buildPlan() {
     const lam0 = ((x + 0.5) / width) * Math.PI * 2 + start;
     return mirror ? lam0 : -lam0;
   };
-  const disk = view === "top" ? detectTop() : view === "bottom" ? detectBottom() : detectSide();
-  const { cx, cy, r } = disk;
+  const disk = baseDisk();
+  const nudge = disk.r / 100;
+  const cx = disk.cx + Number($("cx").value) * nudge;
+  const cy = disk.cy + Number($("cy").value) * nudge;
+  const r = disk.r;
   let W, H, summary, ray;
 
   if (view === "side") {
@@ -459,6 +475,33 @@ function paint() {
   requestAnimationFrame(step);
 }
 
+let diskCache = null;
+function baseDisk() {
+  if (!diskCache) {
+    const view = viewEl.value;
+    diskCache = view === "top" ? detectTop() : view === "bottom" ? detectBottom() : detectSide();
+  }
+  return diskCache;
+}
+function markCenter() {
+  if (!srcData || !srcCtx) return;
+  srcCtx.putImageData(new ImageData(new Uint8ClampedArray(srcData), srcW, srcH), 0, 0);
+  const disk = baseDisk();
+  const nudge = disk.r / 100;
+  const cx = disk.cx + Number($("cx").value) * nudge;
+  const cy = disk.cy + Number($("cy").value) * nudge;
+  srcCtx.save();
+  srcCtx.strokeStyle = "#e0a15a";
+  srcCtx.lineWidth = Math.max(2, srcW / 500);
+  srcCtx.beginPath();
+  srcCtx.arc(cx, cy, Math.max(2, disk.r), 0, Math.PI * 2);
+  const arm = Math.max(8, disk.r * 0.045);
+  srcCtx.moveTo(cx - arm, cy); srcCtx.lineTo(cx + arm, cy);
+  srcCtx.moveTo(cx, cy - arm); srcCtx.lineTo(cx, cy + arm);
+  srcCtx.stroke();
+  srcCtx.restore();
+}
+
 function loadFile(file) {
   const url = URL.createObjectURL(file);
   const img = new Image();
@@ -475,6 +518,11 @@ function loadFile(file) {
     srcCtx = srcCanvas.getContext("2d", { willReadFrequently: true });
     srcCtx.drawImage(img, 0, 0, srcW, srcH);
     srcData = srcCtx.getImageData(0, 0, srcW, srcH).data;
+    $("cx").value = 0;
+    $("cy").value = 0;
+    diskCache = null;
+    syncUi();
+    markCenter();
     $("go").disabled = false;
     $("status").textContent = $("auto").checked
       ? `已載入 ${img.naturalWidth}×${img.naturalHeight}。`
@@ -504,6 +552,8 @@ function syncUi() {
   $("cropVal").textContent = `${cropEl.value}%`;
   $("aspectVal").textContent = Number(aspectEl.value).toFixed(2);
   $("startVal").textContent = `${$("start").value}°`;
+  $("cxVal").textContent = `${$("cx").value}%`;
+  $("cyVal").textContent = `${$("cy").value}%`;
   const notes = {
     side: "圓心當望前。裁切係圓頂同圓底各佔幾多像素。",
     bottom: "圓心當望天。裁切係圓心面積。預設 3%。0% 先可以調寬高比。",
@@ -533,7 +583,7 @@ function maybePaint() {
   if ($("auto").checked && srcData) paint();
 }
 
-viewEl.addEventListener("change", () => { applyViewDefaults(); syncUi(); maybePaint(); });
+viewEl.addEventListener("change", () => { diskCache = null; applyViewDefaults(); syncUi(); markCenter(); maybePaint(); });
 cropEl.addEventListener("input", syncUi);
 cropEl.addEventListener("change", maybePaint);
 aspectEl.addEventListener("input", syncUi);
@@ -541,6 +591,11 @@ aspectEl.addEventListener("change", () => { if (Number(cropEl.value) === 0) mayb
 mirrorEl.addEventListener("change", maybePaint);
 $("start").addEventListener("input", syncUi);
 $("start").addEventListener("change", () => { if (viewEl.value !== "side") maybePaint(); });
+function onCenterMove() { syncUi(); markCenter(); }
+$("cx").addEventListener("input", onCenterMove);
+$("cy").addEventListener("input", onCenterMove);
+$("cx").addEventListener("change", maybePaint);
+$("cy").addEventListener("change", maybePaint);
 $("go").addEventListener("click", paint);
 $("save").addEventListener("click", () => {
   $("dst").toBlob((blob) => {
