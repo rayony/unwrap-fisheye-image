@@ -93,7 +93,9 @@
     <input id="cx" type="range" min="-50" max="50" value="0" step="1" />
     <label>圓心上下 <span class="val" id="cyVal">0%</span></label>
     <input id="cy" type="range" min="-50" max="50" value="0" step="1" />
-    <p class="note">0% 係張相正中，數值係成張相嘅百分比。右同下係正數。圓會大到包住成張相，三個視角、有冇裁切都用同一組。</p>
+    <label>圓半徑 <span class="val" id="crVal">100%</span></label>
+    <input id="cr" type="range" min="20" max="140" value="100" step="1" />
+    <p class="note">圓心 0% 係張相正中，以成張相計。半徑 100% 貼住較短邊；金色圓要貼住魚眼圓邊，行星相多數要調細。圓心移開唔會再改半徑。</p>
 
     <label class="check"><input id="auto" type="checkbox" checked /> 上傳後自動展開</label>
     <label class="check"><input id="mirror" type="checkbox" /> 左右反轉</label>
@@ -208,8 +210,8 @@ const VIEW_DEFAULTS = {
 function photoDisk() {
   const cx = srcW * (0.5 + Number($("cx").value) / 100);
   const cy = srcH * (0.5 + Number($("cy").value) / 100);
-  const r = Math.hypot(Math.max(cx, srcW - cx), Math.max(cy, srcH - cy));
-  return { cx, cy, r };
+  const r = Math.min(srcW, srcH) / 2 * Number($("cr").value) / 100;
+  return { cx, cy, r: Math.max(8, r) };
 }
 
 function sample(x, y) {
@@ -424,6 +426,7 @@ function loadFile(file) {
     srcData = srcCtx.getImageData(0, 0, srcW, srcH).data;
     $("cx").value = 0;
     $("cy").value = 0;
+    $("cr").value = 100;
     syncUi();
     markCenter();
     $("go").disabled = false;
@@ -457,6 +460,7 @@ function syncUi() {
   $("startVal").textContent = `${$("start").value}°`;
   $("cxVal").textContent = `${$("cx").value}%`;
   $("cyVal").textContent = `${$("cy").value}%`;
+  $("crVal").textContent = `${$("cr").value}%`;
   const notes = {
     side: "圓心當望前。裁切係圓頂同圓底各佔幾多像素。",
     bottom: "圓心當望天。裁切係圓心面積。預設 3%。0% 先可以調寬高比。",
@@ -497,8 +501,10 @@ $("start").addEventListener("change", () => { if (viewEl.value !== "side") maybe
 function onCenterMove() { syncUi(); markCenter(); }
 $("cx").addEventListener("input", onCenterMove);
 $("cy").addEventListener("input", onCenterMove);
+$("cr").addEventListener("input", onCenterMove);
 $("cx").addEventListener("change", maybePaint);
 $("cy").addEventListener("change", maybePaint);
+$("cr").addEventListener("change", maybePaint);
 $("go").addEventListener("click", paint);
 $("save").addEventListener("click", () => {
   $("dst").toBlob((blob) => {

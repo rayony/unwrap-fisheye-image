@@ -93,7 +93,9 @@
     <input id="cx" type="range" min="-50" max="50" value="0" step="1" />
     <label>Center up–down <span class="val" id="cyVal">0%</span></label>
     <input id="cy" type="range" min="-50" max="50" value="0" step="1" />
-    <p class="note">0% is the middle of the photo. Values are a percent of the picture. Right and down are positive. The circle grows so it always covers the whole photo, for every view and every crop.</p>
+    <label>Circle radius <span class="val" id="crVal">100%</span></label>
+    <input id="cr" type="range" min="20" max="140" value="100" step="1" />
+    <p class="note">Center 0% is the middle of the photo. Radius 100% touches the shorter side. Match the gold ring to the fisheye edge; a tiny planet is often smaller. Moving the center no longer changes the radius.</p>
 
     <label class="check"><input id="auto" type="checkbox" checked /> Convert automatically after upload</label>
     <label class="check"><input id="mirror" type="checkbox" /> Flip left–right</label>
@@ -208,8 +210,8 @@ const VIEW_DEFAULTS = {
 function photoDisk() {
   const cx = srcW * (0.5 + Number($("cx").value) / 100);
   const cy = srcH * (0.5 + Number($("cy").value) / 100);
-  const r = Math.hypot(Math.max(cx, srcW - cx), Math.max(cy, srcH - cy));
-  return { cx, cy, r };
+  const r = Math.min(srcW, srcH) / 2 * Number($("cr").value) / 100;
+  return { cx, cy, r: Math.max(8, r) };
 }
 
 function sample(x, y) {
@@ -424,6 +426,7 @@ function loadFile(file) {
     srcData = srcCtx.getImageData(0, 0, srcW, srcH).data;
     $("cx").value = 0;
     $("cy").value = 0;
+    $("cr").value = 100;
     syncUi();
     markCenter();
     $("go").disabled = false;
@@ -457,6 +460,7 @@ function syncUi() {
   $("startVal").textContent = `${$("start").value}°`;
   $("cxVal").textContent = `${$("cx").value}%`;
   $("cyVal").textContent = `${$("cy").value}%`;
+  $("crVal").textContent = `${$("cr").value}%`;
   const notes = {
     side: "The centre is looking forward. Crop is the share of pixels cut from the top and the bottom of the circle.",
     bottom: "The centre is looking up. Crop is the area of the centre. Default 3%. Aspect ratio is available only at 0%.",
@@ -497,8 +501,10 @@ $("start").addEventListener("change", () => { if (viewEl.value !== "side") maybe
 function onCenterMove() { syncUi(); markCenter(); }
 $("cx").addEventListener("input", onCenterMove);
 $("cy").addEventListener("input", onCenterMove);
+$("cr").addEventListener("input", onCenterMove);
 $("cx").addEventListener("change", maybePaint);
 $("cy").addEventListener("change", maybePaint);
+$("cr").addEventListener("change", maybePaint);
 $("go").addEventListener("click", paint);
 $("save").addEventListener("click", () => {
   $("dst").toBlob((blob) => {
