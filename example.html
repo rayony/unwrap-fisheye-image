@@ -4,19 +4,26 @@
 <p id="demo">Loading…</p>
 <script src="unwrap-fisheye.js"></script>
 <script>
+
 const params = {
   "view": "side",
-  "crop": 1,
+  "crop": 0,
   "aspect": 1.58,
   "start": 0,
   "cx": 0,
-  "cy": 2,
-  "radius": 93,
+  "cy": 0,
+  "radius": 87,
   "mirror": false,
   "maxSide": 1800,
   "locale": "zh",
-  "trim": { "left": 0, "top": 44, "right": 0, "bottom": 0 }
+  "trim": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+  }
 };
+  
 async function photo() {
   const result = await UnwrapFisheye.unwrap("try-fisheye.jpg", params);
   const demo = document.getElementById("demo");
