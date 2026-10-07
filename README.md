@@ -83,8 +83,9 @@ On the page, click **Copy parameters** / **複製參數**. Paste that into your 
     trim: { left: 0, top: 0, right: 0, bottom: 0 }
   };
   const result = await UnwrapFisheye.unwrap(image, params);
-  // result.canvas is the same picture as Save JPEG, including the crop.
-  // Call unwrap from an async function. image can be an <img> or a canvas.
+  document.body.appendChild(result.canvas);
+  // image may be an <img>, a canvas, ImageData, or an image URL.
+  // Use result.canvas. Do not put the result object into innerHTML.
 </script>
 ```
 

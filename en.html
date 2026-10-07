@@ -616,18 +616,28 @@ $("dst").addEventListener("pointercancel", () => { drag = null; });
 $("go").addEventListener("click", paint);
 $("copy").addEventListener("click", async () => {
   const params = currentParams();
-  const lines = [
-    "const params = " + JSON.stringify(params, null, 2) + ";",
-    "",
+  const text = [
+    "<!DOCTYPE html>",
+    "<html>",
+    "<body>",
+    "<p id=\"demo\">Loading…</p>",
     "<" + "script src=\"https://rayony.github.io/unwrap-fisheye-image/unwrap-fisheye.js\"></" + "script>",
-    "const result = await UnwrapFisheye.unwrap(image, params);",
-    "// result.canvas matches Save JPEG, including the crop.",
-    "// image can be an <img> or a canvas. Call this from an async function.",
-  ];
-  const text = lines.join("\n");
+    "<" + "script>",
+    "const params = " + JSON.stringify(params, null, 2) + ";",
+    "async function photo() {",
+    "  const result = await UnwrapFisheye.unwrap(\"https://rayony.github.io/unwrap-fisheye-image/try-fisheye.jpg\", params);",
+    "  const demo = document.getElementById(\"demo\");",
+    "  demo.textContent = result.summary;",
+    "  demo.after(result.canvas);",
+    "}",
+    "photo();",
+    "</" + "script>",
+    "</body>",
+    "</html>",
+  ].join("\n");
   try {
     await navigator.clipboard.writeText(text);
-    $("status").textContent = document.documentElement.lang.startsWith("zh") ? "已複製參數。" : "Parameters copied.";
+    $("status").textContent = document.documentElement.lang.startsWith("zh") ? "已複製成完整 HTML。把圖片網址改成你嘅圖。" : "Copied a complete HTML page. Change the image URL.";
   } catch (err) {
     window.prompt(document.documentElement.lang.startsWith("zh") ? "複製參數" : "Copy parameters", text);
   }

@@ -320,7 +320,18 @@ const UnwrapFisheye = (function () {
     return c;
   }
 
-  function unwrap(image, params) {
+  function loadImage(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("Could not load image: " + src));
+      img.src = src;
+    });
+  }
+
+  async function unwrap(image, params) {
+    if (typeof image === "string") image = await loadImage(image);
     const state = prepare(image, params);
     const full = renderImageData(state);
     const canvas = crop(full, state.params.trim);
